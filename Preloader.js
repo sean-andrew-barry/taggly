@@ -1,0 +1,602 @@
+import Module from "node:module";
+import FS, {promises as FSP} from "node:fs";
+import { threadId } from "node:worker_threads";
+// import cluster from "node:cluster";
+
+// console.log("~~~parentPort?", !!parentPort);
+// console.log("~~~worker?", !!cluster.worker);
+
+// console.log("Resolve?", import.meta.resolve);
+
+console.log("Preloader", threadId, process.pid);
+// globalThis.test_value = 42;
+
+
+// setInterval(() =>
+// {
+//   const memoryUsage = process.memoryUsage();
+//   console.log(`Loader thread ${threadId} heap: ${memoryUsage.heapUsed / 1024 / 1024} MB`);
+// }, 10000);
+
+// const broadcast_channel = new BroadcastChannel("test");
+
+// broadcast_channel.onmessage = (event) =>
+// {
+//   console.log("~Loader~ BroadcastChannel onmessage", event);
+//   // throw new Error("Test error");
+// };
+
+// broadcast_channel.onmessageerror = (event) =>
+// {
+//   console.log("~Loader~ BroadcastChannel onmessageerror", event);
+//   // throw new Error("Test error");
+// };
+
+// broadcast_channel.onerror = (event) =>
+// {
+//   console.log("~Loader~ BroadcastChannel onerror", event);
+// };
+
+const NULL = new URL("./private/js/Loader/Null.js", import.meta.url);
+const NULL_URL = NULL.href;
+
+const RESOLVE_SKIPS = new Set([
+  ...Module.builtinModules,
+  ...Module.builtinModules.map(m => "node:" + m), // Add all the builtins with their node: prefix
+  "greenlock",
+  "jsdom",
+  "memfs",
+  "mongodb",
+  "node-fetch",
+  "node-forge",
+  "nodemailer",
+  "rollup",
+  "terser",
+  "webpack",
+  "webpack-virtual-modules",
+  "ws",
+  "terser-webpack-plugin",
+]);
+
+let data;
+
+function AddPreload(url, parent_url)
+{
+  if (!data.preloads.has(url))
+  {
+    data.preloads.set(url, {
+      parent_url,
+      imports: [],
+      references: [],
+      flags: [],
+    });
+  }
+
+  if (data.preloads.has(parent_url))
+  {
+    data.preloads.get(parent_url).imports.push(url);
+    data.preloads.get(url).references.push(parent_url);
+  }
+}
+
+function Flag(url, flag)
+{
+  data.preloads.get(url).flags.push(flag);
+}
+
+function Trim(url)
+{
+  if (typeof url !== "string") return "";
+
+  return url.replace("file:///C:/Users/Sean/Documents/Visual%20Studio%202017/Projects/JavaScript/", "").replace("?instance=0", "");
+}
+
+let Block;
+
+export async function initialize(thread_data)
+{
+  // console.log("Initializing Preloader", data);
+  // console.log("Initializing Preloader");
+
+  data = thread_data;
+
+  const block_mod = await import("/js/Memory/Block.js");
+  Block = block_mod.Block;
+
+  // console.log(data.layers);
+
+  // const result = await import("/js/Loader/Data.js");
+
+  // for (const key in thread_data)
+  // {
+  //   if (!thread_data.hasOwnProperty(key)) continue;
+  //   result.Data[key] = thread_data[key];
+  // }
+
+  // data = result.Data;
+
+  // // Import and initialize the loader
+  // const {Loader} = await import("/js/Loader.js");
+  // // console.log("~~~Imported Loader");
+  // const loader = await Loader.Get();
+  // data.loader = loader;
+
+  // try
+  // {
+  //   await loader.Initialize(data);
+  //   // await loader.Start();
+  // }
+  // catch (error)
+  // {
+  //   loader.OnStartError(error);
+  // }
+  // // finally
+  // // {
+  // //   const array = new Int32Array(data.buffer);
+  // //   Atomics.add(array, 0, 1);
+  // //   Atomics.notify(array, 0);
+  // //   console.log("Notifying", Atomics.load(array, 0));
+  // // }
+}
+
+function simulateAsyncFsStat() {
+  return new Promise((resolve) => {
+    // Randomize the time it takes to resolve this promise
+    // to simulate varying times for fs.stat calls
+    const randomTime = Math.floor(Math.random() * 100); // between 0 and 99 milliseconds
+
+    setTimeout(() => {
+      resolve(`Took ${randomTime} milliseconds`);
+    }, randomTime);
+  });
+}
+
+function Sleep(ms)
+{
+  return new Promise((resolve, reject) => setTimeout(resolve, ms));
+}
+
+const DATA = new Map();
+
+function Read(url)
+{
+  return new Promise((resolve, reject) =>
+  {
+    const pathname = url.pathname;
+
+    if (DATA.has(pathname))
+    {
+      return resolve(DATA.get(pathname));
+    }
+
+    FS.readFile(url, (error, data) =>
+    {
+      if (error)
+      {
+        if (error.code !== "ENOENT") return reject(error);
+        else return resolve(undefined); // File does not exist
+      }
+
+      DATA.set(pathname, data);
+
+      return resolve(data);
+    });
+  });
+}
+
+function Stat(url)
+{
+  return new Promise((resolve, reject) =>
+  {
+    FS.stat(url, (error, stats) =>
+    {
+      if (error) return resolve(undefined);
+      else return resolve(stats);
+    });
+  });
+}
+
+function Access(url, flags = FS.constants.F_OK | FS.constants.R_OK)
+{
+  return new Promise((resolve, reject) =>
+  {
+    FS.access(url, flags, (error) =>
+    {
+      // if (error)
+      // {
+      //   console.log("Failed to find", error instanceof Error, error.stack);
+      // }
+
+      if (error) return resolve(false);
+      else return resolve(true);
+    });
+  });
+}
+
+async function Resolver(specifier, context, default_resolve)
+{
+  try
+  {
+    // console.log(Trim(context.parentURL), specifier);
+    // console.log(Trim(context.parentURL), specifier);
+
+    // await simulateAsyncFsStat();
+
+    const loader = data.loader;
+
+    // As soon as there is a loader, hand control over to it
+    if (loader !== undefined)
+    {
+      const result = await loader.OnResolve(specifier, context, default_resolve);
+      
+      if (result)
+      {
+        return result;
+      }
+    }
+
+    if (RESOLVE_SKIPS.has(specifier))
+    {
+      // console.log("~~~Importing skip", specifier);
+      return await default_resolve(specifier, context, default_resolve);
+    }
+
+    // If it has no parentURL, then it's the first import
+    if (!context.parentURL)
+    {
+      console.log("No parent URL for", specifier);
+
+      return {
+        shortCircuit: true,
+        format: "module",
+        // url: NULL_URL,
+        url: specifier,
+      };
+    }
+    else if (specifier.startsWith("/flag"))
+    {
+      const index = specifier.indexOf("#");
+      if (index !== -1)
+      {
+        // Extract the fragment part of the specifier after the "#"
+        const fragment = specifier.substring(index + 1);
+
+        // Now split the fragment by semicolons to get individual flags
+        const flags = fragment.split(";");
+
+        // Iterate over each flag and call the Flag function
+        for (let i = 0; i < flags.length; i++)
+        {
+          const flag = flags[i].trim().toLowerCase();
+          if (flag !== "")
+          {
+            Flag(context.parentURL, flag);
+          }
+        }
+      }
+
+      return {
+        shortCircuit: true,
+        format: "module",
+        url: NULL_URL,
+      };
+    }
+    else if (specifier.startsWith("/loader"))
+    {
+      if (specifier.startsWith("/loader.flag"))
+      {
+        const index = specifier.indexOf("#");
+        if (index !== -1)
+        {
+          // Extract the fragment part of the specifier after the "#"
+          const fragment = specifier.substring(index + 1);
+  
+          // Now split the fragment by semicolons to get individual flags
+          const flags = fragment.split(";");
+  
+          // Iterate over each flag and call the Flag function
+          for (let i = 0; i < flags.length; i++)
+          {
+            const flag = flags[i].trim().toLowerCase();
+            if (flag !== "")
+            {
+              Flag(context.parentURL, flag);
+            }
+          }
+        }
+      }
+
+      return {
+        shortCircuit: true,
+        format: "module",
+        url: NULL_URL,
+      };
+    }
+    else if (specifier.toLowerCase().startsWith("file:///"))
+    {
+      AddPreload(specifier, context.parentURL);
+
+      return {
+        shortCircuit: true,
+        format: "module",
+        url: specifier,
+      };
+    }
+    else
+    {
+      let next_matched = false;
+      for (let i = 0; i < data.layers.length; i++)
+      {
+        const layer = data.layers[i];
+
+        for (let j = 0; j < data.domains.length; j++)
+        {
+          const domain = data.domains[j];
+
+          const url = new URL(layer + "/" + domain + specifier);
+
+          // const stats = await Access(url);
+          const stats = await Read(url);
+          // const stats = await Stat(url);
+
+          if (stats)
+          {
+            const fragment = url.hash;
+            if (fragment !== "")
+            {
+              url.hash = "";
+              // throw new Error(`Invalid hash! ${url.href}`);
+            }
+
+            // TODO: Make sure the parent is trusted to do this I think
+            if (url.searchParams.has("optional"))
+            {
+              const optional = url.searchParams.get("optional") === "true";
+              if (optional)
+              {
+                console.log("Pushing optional");
+                data.domains.unshift("optional");
+              }
+              else
+              {
+                console.log("Popping optional");
+                data.domains.shift("optional");
+              }
+
+              url.searchParams.delete("optional");
+            }
+
+            if (next_matched === false && url.searchParams.has("next"))
+            {
+              const next = url.searchParams.get("next");
+              if (url.pathname.includes(next))
+              {
+                next_matched = true;
+              }
+
+              continue;
+            }
+            else if (next_matched === false && url.searchParams.has("after"))
+            {
+              const after = url.searchParams.get("after");
+              if (url.pathname.includes(after))
+              {
+                next_matched = true;
+              }
+
+              continue;
+            }
+
+            if (url.searchParams.has("include"))
+            {
+              const include = url.searchParams.get("include");
+              if (!url.pathname.includes(include)) continue;
+            }
+
+            if (url.searchParams.has("exclude"))
+            {
+              const exclude = url.searchParams.get("exclude");
+              if (url.pathname.includes(exclude)) continue;
+            }
+
+            url.searchParams.set("instance", data.instance);
+            // url.searchParams.set("imported", data.imported.getTime());
+
+            url.searchParams.delete("next");
+            url.searchParams.delete("after");
+
+            // if (data.development === true)
+            // {
+            //   url.searchParams.set("development", "true");
+            // }
+
+            const href = url.href;
+
+            AddPreload(href, context.parentURL);
+
+            return {
+              shortCircuit: true,
+              format: "module",
+              url: href,
+              raw: url,
+            };
+          }
+        }
+      }
+    }
+
+    return await default_resolve(specifier, context, default_resolve);
+  }
+  catch (error)
+  {
+    const loader = data.loader;
+    
+    if (loader)
+    {
+      const result = await loader.OnResolveError(error, specifier, context);
+      if (result) return result;
+    }
+
+    console.error("Error while resolving", specifier, "from", context.parentURL);
+    console.error(error);
+
+    return {
+      shortCircuit: true,
+      format: "module",
+      url: NULL_URL,
+      raw: NULL,
+    };
+  }
+}
+
+let last_parent_url;
+const PARENTS = new Map();
+
+export async function resolve(specifier, context, default_resolve)
+{
+  if (context.parentURL && !PARENTS.has(context.parentURL))
+  {
+    context.parent = {
+      first: true,
+      complete: false,
+      flags: [],
+      imports: [],
+      url: context.parentURL,
+    };
+
+    PARENTS.set(context.parentURL, context.parent);
+  }
+  else
+  {
+    context.parent = PARENTS.get(context.parentURL);
+    context.parent.first = false;
+  }
+
+  if (context.parent.complete === true)
+  {
+    context.dynamic = true;
+  }
+  else if (last_parent_url && last_parent_url !== context.parentURL)
+  {
+    PARENTS.get(last_parent_url).complete = true;
+  }
+
+  last_parent_url = context.parentURL;
+
+  if (RESOLVE_SKIPS.has(specifier))
+  {
+    context.skip = true;
+  }
+  else if (specifier.startsWith("/flag"))
+  {
+    const flags = specifier.trim().split("#");
+    for (let i = 1; i < flags.length; i++)
+    {
+      context.parent.flags.push(flags[i]);
+    }
+  }
+
+  const result = await Resolver(specifier, context, default_resolve);
+  // console.log("Module", Trim(context.parentURL), "imported", Trim(result.url));
+
+  // result.importAssertions = {};
+
+  // if (Block)
+  // {
+  //   const block = Block.GetFirst(data.buffer);
+  //   // console.log("Result is", Trim(context.parentURL), Trim(result.url), block?.GetLength());
+  //   // console.log("Result is", Trim(context.parentURL), Trim(result.url));
+  // }
+
+  // console.log("Resolved", result);
+
+  return result;
+}
+
+export async function load(url, context, default_load)
+{
+  // console.log("~~~FINISHING~~~", Trim(url));
+
+  if (RESOLVE_SKIPS.has(url))
+  {
+    return await default_load(url, context, default_load);
+  }
+
+  const loader = data.loader;
+
+  try
+  {
+    if (context.format === "module")
+    {
+      if (context?.importAssertions.type === "json")
+      {
+        const mod = await import(url);
+
+        return {
+          format: "json",
+          shortCircuit: true,
+          source: JSON.stringify(mod),
+        };
+      }
+
+      const full_url = new URL(url);
+
+      return {
+        format: "module",
+        shortCircuit: true,
+        source: await Read(full_url),
+      };
+    }
+
+    if (loader)
+    {
+      const result = await loader.OnLoad(url, context, default_load);
+      if (result) return result;
+    }
+
+    const result = await default_load(url, context, default_load);
+    // console.log(result);
+    return result;
+  }
+  catch (error)
+  {
+    if (loader)
+    {
+      const result = await loader.OnLoadError(error, url, context);
+      if (result) return result;
+    }
+
+    console.error("Error while loading", url, "from", context.parentURL);
+    console.error(error);
+
+    return {
+      format: "module",
+      responseURL: url,
+      shortCircuit: true,
+      source: "",
+    };
+  }
+}
+
+globalThis.process.on("message", async (...args) =>
+{
+  console.log("message", args);
+  const loader = data.loader;
+  if (loader) return await loader.OnMessage.apply(loader, args);
+});
+
+// console.log(parentPort, isMainThread);
+
+// parentPort.on("message", async (...args) =>
+// {
+//   console.log("message", args);
+//   const loader = data.loader;
+//   if (loader) return await loader.OnMessage.apply(loader, args);
+// });
+
+globalThis.process.on("uncaughtExceptionMonitor", async (...args) =>
+{
+  console.error("~~~~~~~~uncaughtExceptionMonitor~~~~~");
+  const loader = data.loader;
+  if (loader) return await loader.OnUncaughtException.apply(loader, args);
+});
