@@ -13,15 +13,9 @@ import {Keyboard} from "./Keyboard.js";
 import {ProxyServer} from "./ProxyServer.js";
 import * as C from "./LoaderUtilities/ConsoleColors.js";
 
+import v8 from 'node:v8';
+
 import readline from "node:readline";
-
-console.log("Program", threadId, process.pid);
-
-// setInterval(() =>
-// {
-//   const memoryUsage = process.memoryUsage();
-//   console.log(`Main thread ${threadId} heap: ${memoryUsage.heapUsed / 1024 / 1024} MB`);
-// }, 1000);
 
 const WORKER_OPTIONS = Symbol("worker_options");
 const WORKER_TIMEOUT = Symbol("worker_timeout");
@@ -30,31 +24,6 @@ const WORKER_START = Symbol("worker_start");
 const WORKER_STOPPED = Symbol("worker_stopped");
 const WORKER_ALLOW_AUTO_RESTART = Symbol("worker_allow_auto_restart");
 const WORKER_WILL = Symbol("worker_will"); // Will as in "last will and testament", not "will do"
-
-// const broadcast_channel = new BroadcastChannel("test");
-
-// broadcast_channel.onmessage = (event) =>
-// {
-//   console.log("Parent BroadcastChannel onmessage", event);
-//   // throw new Error("Test error");
-// };
-
-// broadcast_channel.onmessageerror = (event) =>
-// {
-//   console.log("Parent BroadcastChannel onmessageerror", event);
-//   // throw new Error("Test error");
-// };
-
-// broadcast_channel.onerror = (event) =>
-// {
-//   console.log("Parent BroadcastChannel onerror", event);
-// };
-
-// broadcast_channel.postMessage("Hi from parent");
-
-// const { port1, port2 } = new MessageChannel();
-
-// port1.on("message", (message) => console.log(message));
 
 export class Program extends Keyboard
 {
@@ -941,23 +910,23 @@ export class Program extends Keyboard
     pkg.SetWindowURL("https://localhost:3000/");
     pkg.SetClusterSize(1);
 
-    pkg.buffer_bytes ??= 1024 * 1024;
-    pkg.max_buffer_bytes ??= pkg.buffer_bytes * 10;
+    // pkg.buffer_bytes ??= 1024 * 1024;
+    // pkg.max_buffer_bytes ??= pkg.buffer_bytes * 10;
 
-    if (!this.buffer)
-    {
-      this.buffer = new SharedArrayBuffer(pkg.buffer_bytes, { maxByteLength: pkg.max_buffer_bytes });
-      const view = new DataView(this.buffer, 0);
-      // view.setUint32(0, 0); // 
-      view.setInt32(4, this.buffer.byteLength - 4, true);
-      // console.log("Writing length", this.buffer.byteLength - 4, view.getInt32(4));
-    }
+    // if (!this.buffer)
+    // {
+    //   this.buffer = new SharedArrayBuffer(pkg.buffer_bytes, { maxByteLength: pkg.max_buffer_bytes });
+    //   const view = new DataView(this.buffer, 0);
+    //   // view.setUint32(0, 0); // 
+    //   view.setInt32(4, this.buffer.byteLength - 4, true);
+    //   // console.log("Writing length", this.buffer.byteLength - 4, view.getInt32(4));
+    // }
 
     // this.buffer ??= new SharedArrayBuffer(pkg.buffer_bytes);
-    pkg.buffer = this.buffer;
+    // pkg.buffer = this.buffer;
 
     // pkg.AddFlag("--trace-warnings");
-    pkg.AddFlag("--experimental-vm-modules");
+    // pkg.AddFlag("--experimental-vm-modules");
     // pkg.AddFlag("--experimental-shadow-realm");
     // pkg.AddFlag("--experimental-modules");
     // pkg.AddFlag("--harmony-top-level-await");
@@ -1228,12 +1197,7 @@ export class Program extends Keyboard
 
         if (pkg.HasFlags()) argv.push.apply(argv, pkg.GetFlags());
 
-        // const options = await this.CreateClusterOptions(pkg);
-
-        // cluster.setupPrimary(options);
-
         let cluster_size = pkg.GetClusterSize();
-        // cluster_size = 10;
         if (cluster_size === 0 || cluster_size === null || cluster_size === undefined)
         {
           // If cluster_size is 0, null, or undefined: treat it as one worker per core
@@ -1248,15 +1212,9 @@ export class Program extends Keyboard
         this.start_time = Date.now();
         for (let i = 0; i < cluster_size; i++)
         {
-          // console.log("Spawning worker", pkg.GetMainPath());
           const worker = new Worker(pkg.GetMainPath(), {
             execArgv: pkg.flags,
-            // execArgv: [ '--experimental-vm-modules', '--harmony-shadow-realm' ],
-            // execArgv: [ '--experimental-vm-modules', '--harmony-shadow-realm' ],
-            workerData: pkg,
-            // transferList: [pkg.buffer],
           });
-          // const worker = await this.StartWorker(options);
 
           if (typeof(pkg.cluster_delay) === "number")
           {
