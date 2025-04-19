@@ -13,8 +13,6 @@ import {Keyboard} from "./Keyboard.js";
 import {ProxyServer} from "./ProxyServer.js";
 import * as C from "./LoaderUtilities/ConsoleColors.js";
 
-import v8 from 'node:v8';
-
 import readline from "node:readline";
 
 const WORKER_OPTIONS = Symbol("worker_options");
@@ -869,10 +867,7 @@ export class Program extends Keyboard
 
     if (!pkg.layers)
     {
-      pkg.layers = [
-        path,
-        __dirname,
-      ];
+      pkg.layers = [];
     }
 
     // Make each layer path into an absolute file URL
