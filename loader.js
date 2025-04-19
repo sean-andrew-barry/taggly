@@ -659,6 +659,8 @@ export class Loader extends Layer
   Send(action, ...args)
   {
     const json = JSON.stringify([action, args], undefined, 2);
+    console.log(json);
+    
     global.process.send(json);
     return this;
   }
@@ -1679,7 +1681,7 @@ Object.defineProperty(global, taggly_loader, {
   enumerable: false,
   configurable: false,
 
-  // We only allow the loader to be accessed globaly one time
+  // We only allow the loader to be accessed globally one time
   // Since the private/js/Loader.js file always accesses the loader,
   // if anything ELSE tries to, it should cause an error
   get()
@@ -1698,7 +1700,7 @@ Object.defineProperty(global, taggly_loader, {
 
 Object.defineProperty(globalThis, Symbol.for("global.taggly.internal"), {
   value: {
-    // We only allow the loader to be accessed globaly one time
+    // We only allow the loader to be accessed globally one time
     // Since the /js/Loader.js file always accesses the loader,
     // if anything ELSE tries to, it should cause an error
     Loader()
@@ -1742,11 +1744,6 @@ global.process.on("uncaughtExceptionMonitor", (...args) =>
 {
   loader.OnUncaughtException.apply(loader, args);
 });
-
-if (import.meta.resolve)
-{
-  console.warn("import.meta.resolve is defined. This may break security when running untrusted code! I'm not sure if it actually does or not. It would depend on if import.meta.resolve bypasses the normal loader system. What makes it different from a dynamic import?");
-}
 
 // const sites = [];
 // const taggly = new Layer("");
