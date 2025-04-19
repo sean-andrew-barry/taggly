@@ -1,7 +1,9 @@
 import Module from "node:module";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { MessageChannel, threadId, Worker, isMainThread, parentPort, workerData, BroadcastChannel } from "node:worker_threads";
-// import {  } from "node:worker_threads";
+import { resolve, load } from "./Loader.js";
+
+registerHooks({ resolve, load });
 
 // setInterval(() =>
 // {
@@ -9,7 +11,7 @@ import { MessageChannel, threadId, Worker, isMainThread, parentPort, workerData,
 //   console.log(`Worker thread ${threadId} heap: ${memoryUsage.heapUsed / 1024 / 1024} MB`);
 // }, 10000);
 
-// console.log("Start", threadId, process.pid);
+// console.log("Start.js", threadId, process.pid);
 
 // console.log("Start", threadId, import.meta.resolve, !!parentPort);
 
@@ -33,7 +35,7 @@ import { MessageChannel, threadId, Worker, isMainThread, parentPort, workerData,
 //   "terser-webpack-plugin",
 // ]);
 
-let data = workerData;
+// let data = workerData;
 // let data = JSON.parse(process.env.TAGGLY_PACKAGE);
 
 // // Delete the TAGGLY_PACKAGE because it can hold secrets, and I do not want
@@ -44,20 +46,20 @@ let data = workerData;
 // delete process.env.TAGGLY_PACKAGE;
 
 // 
-const { port1, port2 } = new MessageChannel();
+// const { port1, port2 } = new MessageChannel();
 
-data.instance = 0;
-data.imported = new Date();
-// data.resolve_skips = [...RESOLVE_SKIPS];
-// data.resolve_skips = RESOLVE_SKIPS;
-data.preloads = new Map();
-data.loader_path = import.meta.url;
-data.preloader_url = import.meta.url;
-data.preloading = true;
-data.number = 1;
-// data.port = port2;
-// data.port = parentPort;
-data.loader = undefined;
+// data.instance = 0;
+// data.imported = new Date();
+// // data.resolve_skips = [...RESOLVE_SKIPS];
+// // data.resolve_skips = RESOLVE_SKIPS;
+// data.preloads = new Map();
+// data.loader_path = import.meta.url;
+// data.preloader_url = import.meta.url;
+// data.preloading = true;
+// data.number = 1;
+// // data.port = port2;
+// // data.port = parentPort;
+// data.loader = undefined;
 
 // port1.on('message', (args) =>
 // {
@@ -80,13 +82,13 @@ data.loader = undefined;
 
 // console.log("Pre preloader", current);
 
-console.log("Importing loader...");
+// console.log("Importing loader...");
 
-register("./Preloader.js", {
-  parentURL: import.meta.url,
-  data,
-  transferList: [port2],
-});
+// register("./Preloader.js", {
+//   parentURL: import.meta.url,
+//   data,
+//   transferList: [port2],
+// });
 
 // const result = await import("/js/Coder.js");
 
