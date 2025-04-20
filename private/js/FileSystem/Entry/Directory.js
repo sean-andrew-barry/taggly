@@ -10,6 +10,8 @@ const SOURCE = Symbol("source");
 
 export class Directory extends Entry
 {
+  #children = new Map();
+  
   constructor(source, parent)
   {
     super(source, parent);
@@ -26,7 +28,6 @@ export class Directory extends Entry
     }
   }
 
-  #children = new Map();
   GetChildren(){ return this.#children; }
 
   async Initialize()

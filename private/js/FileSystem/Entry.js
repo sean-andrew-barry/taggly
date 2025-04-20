@@ -54,6 +54,25 @@ export class Entry extends globalThis.URL
     }
   }
 
+  #destructed;
+  #stats;
+  #trusted = false;
+  #resolved = false;
+  #instance = 0;
+  #imported = 0;
+  #flags = new BitSet();
+  #name;
+  #parts;
+  #path;
+  #destructors;
+  #constructors;
+  #imports;
+  #references;
+  #resolver;
+  #rejecter;
+  #promise;
+  #parent;
+
   constructor(source, parent)
   {
     super(source, BASE);
@@ -110,7 +129,6 @@ export class Entry extends globalThis.URL
     this.#destructed = true;
   }
 
-  #destructed;
   Assert()
   {
     if (this.#destructed)
@@ -119,30 +137,24 @@ export class Entry extends globalThis.URL
     }
   }
 
-  #stats;
   GetStats(){ this.Assert(); return this.#stats; }
   SetStats(stats){ this.Assert(); return this.#stats = stats; }
-
-  #trusted = false;
+  
   IsTrusted(){ this.Assert(); return this.#trusted === true; }
   GetTrusted(){ this.Assert(); return this.#trusted; }
   SetTrusted(trusted){ this.Assert(); return this.#trusted = trusted; }
-
-  #resolved = false;
+  
   IsResolved(){ this.Assert(); return this.#resolved === true; }
   GetResolved(){ this.Assert(); return this.#resolved; }
   SetResolved(resolved){ this.Assert(); return this.#resolved = resolved; }
-
-  #instance = 0;
+  
   GetInstance(){ this.Assert(); return this.#instance; }
   SetInstance(instance){ this.Assert(); return this.#instance = instance; }
-
-  #imported = 0;
+  
   SetImported(imported){ this.Assert(); return this.#imported = imported; }
   GetImported(){ this.Assert(); return this.#imported; }
   IsIncremented(){ this.Assert(); return this.GetInstance() > this.GetImported(); }
-
-  #flags = new BitSet();
+  
   GetFlags(){ this.Assert(); return this.#flags; }
   IsStatic(){ this.Assert(); return this.#flags.Has(0); }
   IsFrozen(){ this.Assert(); return this.#flags.Has(1); }
@@ -189,39 +201,29 @@ export class Entry extends globalThis.URL
     }
   }
 
-  #name;
   GetName(){ this.Assert(); return this.#name; }
   SetName(name){ this.Assert(); return this.#name = name; }
-
-  #parts;
+  
   GetParts(){ this.Assert(); return this.#parts ??= this.Split(this.pathname); }
-
-  #path;
+  
   GetPath(){ this.Assert(); return this.#path ??= fileURLToPath(this); }
-
-  #destructors;
+  
   HasDestructors(){ this.Assert(); return this.#destructors !== undefined && this.#destructors.length > 0; }
   GetDestructors(){ this.Assert(); return this.#destructors; }
   AddDestructor(destructor){ this.Assert(); (this.#destructors ??= []).push(destructor); }
 
-  #constructors;
   HasConstructors(){ this.Assert(); return this.#constructors !== undefined && this.#constructors.length > 0; }
   GetConstructors(){ this.Assert(); return this.#constructors; }
   AddConstructor(ctor){ this.Assert(); (this.#constructors ??= []).push(ctor); }
 
-  #imports;
   HasImports(){ this.Assert(); return this.#imports !== undefined; }
   GetImports(){ this.Assert(); return this.#imports ??= new Set(); }
   AddImport(entry){ this.Assert(); this.GetImports().add(entry); return this; }
   
-  #references;
   HasReferences(){ this.Assert(); return this.#references !== undefined; }
   GetReferences(){ this.Assert(); return this.#references ??= new Set(); }
   AddReference(entry){ this.Assert(); this.GetReferences().add(entry); return this; }
 
-  #resolver;
-  #rejecter;
-  #promise;
   Await()
   {
     return this.#promise;
@@ -347,7 +349,7 @@ export class Entry extends globalThis.URL
     }
   }
 
-  #parent;
+  
   // SetParent(parent){ this.Assert(); return this.#parent = parent; }
   GetParent(){ this.Assert(); return this.#parent; }
 
