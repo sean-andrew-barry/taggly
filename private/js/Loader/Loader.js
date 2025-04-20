@@ -1807,7 +1807,7 @@ export class Loader
   OnKeyGraveAccent(){}
   OnKeyOpenBracket(){}
   OnKeyBackSlash(){}
-  OnKeyCloseBraket(){}
+  OnKeyCloseBracket(){}
   OnKeySingleQuote(){}
   OnKeyDoubleQuote(){}
   OnKeyBackQuote(){}
