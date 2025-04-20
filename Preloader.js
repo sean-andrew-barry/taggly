@@ -2,43 +2,6 @@ import Module from "node:module";
 import FS, {promises as FSP} from "node:fs";
 import { threadId, workerData as data } from "node:worker_threads";
 
-// console.log(workerData);
-// import cluster from "node:cluster";
-
-// console.log("~~~parentPort?", !!parentPort);
-// console.log("~~~worker?", !!cluster.worker);
-
-// console.log("Resolve?", import.meta.resolve);
-
-console.log("Preloader", threadId, process.pid, data);
-// globalThis.test_value = 42;
-
-
-// setInterval(() =>
-// {
-//   const memoryUsage = process.memoryUsage();
-//   console.log(`Loader thread ${threadId} heap: ${memoryUsage.heapUsed / 1024 / 1024} MB`);
-// }, 10000);
-
-// const broadcast_channel = new BroadcastChannel("test");
-
-// broadcast_channel.onmessage = (event) =>
-// {
-//   console.log("~Loader~ BroadcastChannel onmessage", event);
-//   // throw new Error("Test error");
-// };
-
-// broadcast_channel.onmessageerror = (event) =>
-// {
-//   console.log("~Loader~ BroadcastChannel onmessageerror", event);
-//   // throw new Error("Test error");
-// };
-
-// broadcast_channel.onerror = (event) =>
-// {
-//   console.log("~Loader~ BroadcastChannel onerror", event);
-// };
-
 const NULL = new URL("./private/js/Loader/Null.js", import.meta.url);
 const NULL_URL = NULL.href;
 
@@ -59,8 +22,6 @@ const RESOLVE_SKIPS = new Set([
   "ws",
   "terser-webpack-plugin",
 ]);
-
-// let data;
 
 function AddPreload(url, parent_url)
 {
@@ -121,14 +82,14 @@ export async function initialize()
 
   // Import and initialize the loader
   const {Loader} = await import("/js/Loader.js");
-  console.log("~~~Imported Loader");
   const loader = await Loader.Get();
-  data.loader = loader;
-
+  // data.loader = loader;
+  
   try
   {
+    console.log("~~~Imported Loader");
     await loader.Initialize(data);
-    // await loader.Start();
+    await loader.Start();
   }
   catch (error)
   {
@@ -190,28 +151,28 @@ function Read(url)
 
 /**
  * Synchronous counterpart to Read().
- * Returns a Buffer or `undefined` (for a missing file).
+ * Returns a String or `undefined` (for a missing file).
  * Throws any other I/O error.
  */
 function ReadSync(url) {
   const pathname = url.pathname;
 
-  // 1 — in‑memory cache
-  if (DATA.has(pathname)) return DATA.get(pathname);
+  /* 1 — in‑memory cache */
+  if (DATA.has(pathname)) return DATA.get(pathname);   // string
 
-  // 2 — load from disk (sync)
-  let buffer;
+  /* 2 — load from disk (sync) */
+  let source;
   try {
-    // fs.readFileSync accepts a WHATWG file: URL
-    buffer = FS.readFileSync(url);
+    // Passing "utf8" makes readFileSync return a string directly
+    source = FS.readFileSync(url, 'utf8');
   } catch (err) {
-    if (err.code === 'ENOENT') return undefined; // file does not exist
-    throw err;                                    // propagate unexpected errors
+    if (err.code === 'ENOENT') return undefined;       // file does not exist
+    throw err;                                         // propagate unexpected errors
   }
 
-  // 3 — populate cache, return Buffer
-  DATA.set(pathname, buffer);
-  return buffer;
+  /* 3 — populate cache, return string */
+  DATA.set(pathname, source);
+  return source;
 }
 
 function Stat(url)
@@ -484,7 +445,6 @@ function ResolverSync(specifier, context, default_resolve)
   try
   {
     // console.log(Trim(context.parentURL), specifier);
-    // console.log(Trim(context.parentURL), specifier);
 
     const loader = data.loader;
 
@@ -680,7 +640,6 @@ function ResolverSync(specifier, context, default_resolve)
               shortCircuit: true,
               format: "module",
               url: href,
-              raw: url,
             };
           }
         }
@@ -820,6 +779,9 @@ export function resolveSync(specifier, context, default_resolve)
   }
 
   const result = ResolverSync(specifier, context, default_resolve);
+  // result.shortCircuit = false;
+  // console.log(result);
+  
   // console.log("Module", Trim(context.parentURL), "imported", Trim(result.url));
 
   // result.importAssertions = {};
@@ -915,8 +877,10 @@ export function loadSync(url, context, default_load)
 
   try
   {
-    if (context.format === "module")
-    {
+    if (loader) {
+      const result = loader.OnLoadSync(url, context, default_load);
+      if (result) return result;
+    } else if (context.format === "module") {
       // if (context?.importAssertions.type === "json")
       // {
       //   const mod = await import(url);
@@ -929,30 +893,37 @@ export function loadSync(url, context, default_load)
       // }
 
       const full_url = new URL(url);
+      const source = ReadSync(full_url);
 
-      console.log("~~~FINISHING~~~", full_url.href);
+      // const tagged = `${source}\n//# sourceMappingURL=${fileURLToPath(full_url.href)}\n`;
+
+      // // Compile once ourselves so V8 can tag errors with `url`
+      // try {
+      //   new SourceTextModule(tagged, { identifier: fileURLToPath(full_url.href) });
+      // } catch (err) {
+      //   // The SyntaxError now contains `url` and line/col
+      //   console.log("~~~ERRORING~~~", full_url.href);
+      //   throw err;                          // propagate
+      // }
+
+      
+
+      // console.log("~~~FINISHING~~~", full_url.href);
 
       return {
+        url: full_url.href,
         format: "module",
         shortCircuit: true,
-        source: ReadSync(full_url),
+        source: source + '\n//# sourceURL=' + full_url.href,
       };
-    }
-
-    if (loader)
-    {
-      const result = loader.OnLoadSync(url, context, default_load);
-      if (result) return result;
     }
 
     const result = default_load(url, context, default_load);
     console.log(result);
     return result;
   }
-  catch (error)
-  {
-    if (loader)
-    {
+  catch (error) {
+    if (loader) {
       const result = loader.OnLoadErrorSync(error, url, context);
       if (result) return result;
     }
@@ -962,7 +933,7 @@ export function loadSync(url, context, default_load)
 
     return {
       format: "module",
-      responseURL: url,
+      url: url,
       shortCircuit: true,
       source: "",
     };
