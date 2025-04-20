@@ -14,6 +14,14 @@ const ENCODING = "utf8";
 
 export class File extends Entry
 {
+  #bytes = 0;
+  #lines = 0;
+  #gzip;
+  #deflate;
+  #module_cached_data;
+  #data;
+  #etag;
+
   constructor(source, parent)
   {
     super(source, parent);
@@ -31,17 +39,11 @@ export class File extends Entry
     }
   }
 
-  #bytes = 0;
   GetSize(){ return this.#bytes; }
   GetBytes(){ return this.#bytes; }
 
-  #lines = 0;
   GetLines(){ return this.#lines; }
 
-  #gzip;
-  #deflate;
-
-  #module_cached_data;
   HasModuleCachedData(){ return this.#module_cached_data !== undefined; }
   GetModuleCachedData(){ return this.#module_cached_data; }
   SetModuleCachedData(module_cached_data){ return this.#module_cached_data = module_cached_data; }
@@ -145,7 +147,6 @@ export class File extends Entry
     return Buffer.concat(chunks);
   }
 
-  #data;
   CreateData()
   {
     // fall back to fast path if another caller already loaded sync
@@ -168,7 +169,6 @@ export class File extends Entry
   GetData() { this.Assert(); return this.#data ??= this.CreateData(); }
   GetDataSync() { this.Assert(); return this.#data ??= this.CreateDataSync(); }
 
-  #etag;
   async CreateETag()
   {
     const data = await this.GetData();
