@@ -928,7 +928,9 @@ export class Program extends Keyboard
     pkg.buffer = this.buffer;
 
     // pkg.AddFlag("--trace-warnings");
+    // pkg.AddFlag("--trace-uncaught");
     // pkg.AddFlag("--experimental-vm-modules");
+    // pkg.AddFlag("--trace-imports");
     // pkg.AddFlag("--experimental-shadow-realm");
     // pkg.AddFlag("--experimental-modules");
     // pkg.AddFlag("--harmony-top-level-await");
