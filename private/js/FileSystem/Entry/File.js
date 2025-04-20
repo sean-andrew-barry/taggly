@@ -147,7 +147,7 @@ export class File extends Entry
     return Buffer.concat(chunks);
   }
 
-  CreateData()
+  async CreateData()
   {
     // fall back to fast path if another caller already loaded sync
     if (this.#data) return this.#data;
@@ -177,7 +177,7 @@ export class File extends Entry
     return hash.toString(16);
   }
 
-  async CreateETagSync()
+  CreateETagSync()
   {
     const data = this.GetDataSync();
     const hash = Cyrb.Hash53(data);
