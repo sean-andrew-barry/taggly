@@ -865,9 +865,17 @@ export class Program extends Keyboard
       ];
     }
 
-    if (!pkg.layers)
-    {
-      pkg.layers = [];
+    if (!pkg.layers) {
+      if (path === __dirname) {
+        pkg.layers = [
+          path
+        ];
+      } else {
+        pkg.layers = [
+          path,
+          __dirname,
+        ];
+      }
     }
 
     // Make each layer path into an absolute file URL
