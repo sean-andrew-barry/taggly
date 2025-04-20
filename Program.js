@@ -1216,6 +1216,7 @@ export class Program extends Keyboard
         {
           const worker = new Worker(pkg.GetMainPath(), {
             execArgv: pkg.flags,
+            workerData: pkg,
           });
 
           if (typeof(pkg.cluster_delay) === "number")
