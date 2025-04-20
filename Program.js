@@ -3,6 +3,7 @@ import { join, dirname, resolve } from "node:path";
 import fs from "node:fs";
 import cluster from "node:cluster";
 import { MessageChannel, BroadcastChannel, Worker, threadId } from "node:worker_threads";
+import Module from "node:module";
 import os from "node:os";
 import net from "node:net";
 import http from "node:http";
@@ -805,6 +806,23 @@ export class Program extends Keyboard {
     pkg.SetWindowURL("https://localhost:3000/");
     pkg.SetClusterSize(1);
     pkg.preloads = new Map();
+    pkg.resolve_skips = new Set([
+      ...Module.builtinModules,
+      ...Module.builtinModules.map(m => "node:" + m), // Add all the builtins with their node: prefix
+      "greenlock",
+      "jsdom",
+      "memfs",
+      "mongodb",
+      "node-fetch",
+      "node-forge",
+      "nodemailer",
+      "rollup",
+      "terser",
+      "webpack",
+      "webpack-virtual-modules",
+      "ws",
+      "terser-webpack-plugin",
+    ]);
     pkg.instance = 0;
 
     pkg.buffer_bytes ??= 1024 * 1024;
