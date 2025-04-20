@@ -5,6 +5,6 @@
 import "/flag#static;frozen;dangerous;domain";
 import { workerData } from "node:worker_threads";
 
-console.log(workerData);
+// console.log(workerData);
 
 export const Data = workerData;
