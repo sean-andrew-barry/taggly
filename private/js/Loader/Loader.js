@@ -4,16 +4,16 @@ import "/js/FileSystem/Entries.js";
 
 // import { threadId } from "node:worker_threads";
 
-import {Query} from "/js/Loader/Query.js";
-import {Directory} from "/js/FileSystem/Entry/Directory.js";
-import {Layer} from "/js/FileSystem/Entry/Directory/Layer.js";
-import {File} from "/js/FileSystem/Entry/File.js";
-import {Placeholder} from "/js/FileSystem/Entry/Placeholder.js";
-import {ErrorParser} from "/js/External/ErrorParser.js";
-import {ConsoleColors, ConsoleColors as C} from "/js/Utility/ConsoleColors.js";
-import {Buffer as TagglyBuffer} from "/js/Utility/Buffer.js";
-import {Data as DATA} from "/js/Loader/Data.js";
-import {StringBuilder} from "/js/Utility/StringBuilder.js";
+import { Query } from "/js/Loader/Query.js";
+import { Directory } from "/js/FileSystem/Entry/Directory.js";
+import { Layer } from "/js/FileSystem/Entry/Directory/Layer.js";
+import { File } from "/js/FileSystem/Entry/File.js";
+import { Placeholder } from "/js/FileSystem/Entry/Placeholder.js";
+import { ErrorParser } from "/js/External/ErrorParser.js";
+import { ConsoleColors, ConsoleColors as C } from "/js/Utility/ConsoleColors.js";
+import { Buffer as TagglyBuffer } from "/js/Utility/Buffer.js";
+import { Data as DATA } from "/js/Loader/Data.js";
+import { StringBuilder } from "/js/Utility/StringBuilder.js";
 
 const NULL_URL = new URL("../Loader/Null.js", import.meta.url).href;
 const ERROR_URL = new URL("../Loader/Error.js", import.meta.url).href;
@@ -36,9 +36,8 @@ const RESOLVED_FLAG = Buffer.from(`\nimport {Resolver as __LoaderAutoResolver} f
 // console.log("Evaluated Loader.js", import.meta.url, threadId);
 
 let instance;
-export class Loader
-{
-  static Get(){ return instance ??= new this(); }
+export class Loader {
+  static Get() { return instance ??= new this(); }
 
   #name;
   #version;
@@ -93,8 +92,7 @@ export class Loader
   #last_entry_resolved;
   #last_entry_loaded;
 
-  CreateLayer(index, url)
-  {
+  CreateLayer(index, url) {
     const layer = new Layer(url);
 
     layer.SetTrusted(true);
@@ -118,44 +116,43 @@ export class Loader
     return layer;
   }
 
-  GetLoading(){ return this.#loading; }
-  GetStart(){ return this.#start; }
-  GetWindowURL(){ return this.#window_url ?? "https://localhost/"; }
-  GetContentType(){ return this.#content_type ?? "text/html"; }
-  GetStorageQuota(){ return this.#storage_quota; }
-  GetDevelopment(){ return this.#development; }
-  GetInstance(){ return this.#instance; }
-  GetImported(){ return this.#imported; }
-  GetVersion(){ return this.#version; }
-  GetVersionMajor(){ return this.#version_major; }
-  GetVersionMinor(){ return this.#version_minor; }
-  GetVersionPatch(){ return this.#version_patch; }
-  GetDomains(){ return this.#domains; }
-  GetLoaderPath(){ return this.#loader_path; }
-  GetPreloaderURL(){ return this.#preloader_url; }
-  GetDefaultResolver(){ return this.#default_resolver; }
-  UseResolvedFlag(){ return true; }
+  GetLoading() { return this.#loading; }
+  GetStart() { return this.#start; }
+  GetWindowURL() { return this.#window_url ?? "https://localhost/"; }
+  GetContentType() { return this.#content_type ?? "text/html"; }
+  GetStorageQuota() { return this.#storage_quota; }
+  GetDevelopment() { return this.#development; }
+  GetInstance() { return this.#instance; }
+  GetImported() { return this.#imported; }
+  GetVersion() { return this.#version; }
+  GetVersionMajor() { return this.#version_major; }
+  GetVersionMinor() { return this.#version_minor; }
+  GetVersionPatch() { return this.#version_patch; }
+  GetDomains() { return this.#domains; }
+  GetLoaderPath() { return this.#loader_path; }
+  GetPreloaderURL() { return this.#preloader_url; }
+  GetDefaultResolver() { return this.#default_resolver; }
+  UseResolvedFlag() { return true; }
   // UseResolvedFlag(){ return false; }
-  CountFlagRequests(){ return false; }
+  CountFlagRequests() { return false; }
 
-  GetReloadable(){ return this.#reloadable; }
-  SetReloadable(reloadable){ this.#reloadable = reloadable; }
+  GetReloadable() { return this.#reloadable; }
+  SetReloadable(reloadable) { this.#reloadable = reloadable; }
 
-  GetReloadPromise(){ return this.#reload_promise; }
-  SetReloadPromise(reload_promise){ this.#reload_promise = reload_promise; }
+  GetReloadPromise() { return this.#reload_promise; }
+  SetReloadPromise(reload_promise) { this.#reload_promise = reload_promise; }
 
-  GetParentMap(){ return this.#parent_map; }
-  GetQueryCache(){ return this.#query_cache; } // TODO
-  GetLayers(){ return this.#layers; }
+  GetParentMap() { return this.#parent_map; }
+  GetQueryCache() { return this.#query_cache; } // TODO
+  GetLayers() { return this.#layers; }
   // IsWrapping(){ return true; }
-  IsWrapping(){ return false; }
-  IsContextifying(){ return true; }
+  IsWrapping() { return false; }
+  IsContextifying() { return true; }
   // IsContextifying(){ return false; }
-  IsDevelopment(){ return this.#development === true; }
-  GetTrusted(){ return true; }
+  IsDevelopment() { return this.#development === true; }
+  GetTrusted() { return true; }
 
-  constructor(data = DATA)
-  {
+  constructor(data = DATA) {
     // // console.log("CONSTRUCTING LOADER");
     // const old_loader = data.loader;
     // data.loader = this;
@@ -227,10 +224,10 @@ export class Loader
     //   if (data.preloads)
     //   {
     //     const preloads = data.preloads;
-        
+
     //     // Reset these, since the layers are shared between loaders
     //     data.preloads = new Map();
-  
+
     //     this.Preloads(preloads);
     //   }
     // }
@@ -243,8 +240,7 @@ export class Loader
     // this.Start();
   }
 
-  Initialize(data)
-  {
+  Initialize(data) {
     // console.log("CONSTRUCTING LOADER");
     const old_loader = data.loader;
     data.loader = this;
@@ -262,8 +258,7 @@ export class Loader
 
     this.#version = data?.npm_config?.version ?? data.version ?? "1.0.0";
 
-    const parts = this.#version.split(".").map(p =>
-    {
+    const parts = this.#version.split(".").map(p => {
       const n = Number(p);
 
       if (Number.isNaN(n)) return 0;
@@ -281,8 +276,7 @@ export class Loader
     if (data.flags) this.#flags.push(...data.flags);
     if (data.domains) this.#domains.push(...data.domains);
 
-    if (this.#development && !this.#domains.includes("development"))
-    {
+    if (this.#development && !this.#domains.includes("development")) {
       // console.log("Adding development domain");
       this.#domains.unshift("development");
       // console.log(this.#domains);
@@ -290,37 +284,31 @@ export class Loader
 
     if (data.preloader_url) this.#preloader_url = data.preloader_url;
 
-    if (old_loader)
-    {
-      for (const layer of old_loader.GetLayers())
-      {
+    if (old_loader) {
+      for (const layer of old_loader.GetLayers()) {
         // console.log("Cloning layer", layer.GetNormalized());
         this.#layers.push(new Layer(layer, this));
 
         layer.destructor();
       }
     }
-    else if (data.layers)
-    {
-      for (let i = 0; i < data.layers.length; i++)
-      {
+    else if (data.layers) {
+      for (let i = 0; i < data.layers.length; i++) {
         let layer = data.layers[i];
 
-        if (typeof(layer) === "string")
-        {
+        if (typeof (layer) === "string") {
           layer = this.CreateLayer(i, layer);
         }
 
         this.#layers.push(layer);
       }
 
-      if (data.preloads)
-      {
+      if (data.preloads) {
         const preloads = data.preloads;
-        
+
         // Reset these, since the layers are shared between loaders
         data.preloads = new Map();
-  
+
         this.Preloads(preloads);
       }
     }
@@ -333,37 +321,30 @@ export class Loader
     // this.Start();
   }
 
-  Preloads(preloads)
-  {
+  Preloads(preloads) {
     const domains = this.GetDomains();
 
-    for (const [url, {parent_url, imports, references, flags}] of preloads)
-    {
+    for (const [url, { parent_url, imports, references, flags }] of preloads) {
       let parent;
-      if (parent_url)
-      {
+      if (parent_url) {
         parent = this.Query(parent_url, domains, { trusted: true });
       }
 
       const entry = this.Query(url, domains, { parent, trusted: true });
 
-      if (!entry)
-      {
+      if (!entry) {
         throw new Error(`Failed to preload an entry for "${url}`);
       }
 
-      for (const flag of flags)
-      {
+      for (const flag of flags) {
         entry.Flag(flag);
       }
 
-      for (const url of imports)
-      {
+      for (const url of imports) {
         entry.AddImport(this.Query(url, domains, { parent: entry, trusted: true }));
       }
 
-      for (const url of references)
-      {
+      for (const url of references) {
         entry.AddReference(this.Query(url, domains, { parent: entry, trusted: true }));
       }
 
@@ -372,87 +353,76 @@ export class Loader
     }
   }
 
-  Send(...args)
-  {
+  Send(...args) {
     // console.log("Not sending", args);
     // console.warn("Implement Loader.Send", args.at(0));
   }
 
-  async Start()
-  {
+  async Start() {
     await this.#loading;
 
-    return this.#loading = new Promise(async (resolve, reject) =>
-    {
+    return this.#loading = new Promise(async (resolve, reject) => {
       const time = performance.now();
 
       this.#lines = 0;
       this.#files = 0;
       this.#requests = 0;
       this.#loaded.clear();
-  
+
       this.#loader = this.Query(SELF_URL);
       this.#start = this.Query("/js/Start.js");
 
       await this.Import("/js/Start.js")
-      .then(async mod =>
-      {
-        const stop = performance.now() - time;
-  
-        const loaded = [...this.#loaded].sort((a, b) =>
-        {
-          return a.GetBytes() - b.GetBytes();
-        });
-  
-        let lines = 0;
-        let bytes = 0;
-        for (let i = 0; i < loaded.length; i++)
-        {
-          const entry = loaded[i];
-          // console.log(i, entry.GetNormalized(), entry.GetBytes(), entry.GetLines());
-          lines += entry.GetLines();
-          bytes += entry.GetBytes();
-        }
-  
-        console.log(`Resolved ${C.Number(this.#requests)} imports and loaded ${C.Number(lines)} lines (${C.Number(bytes / (1_000_000))}mb) from ${C.Number(loaded.length)} files after ${C.Number(stop)} ms`);
-  
-        if (!Object.hasOwn(mod, "Main") || typeof(mod.Main) !== "function")
-        {
-          throw new Error(`Expected the file "${this.#start.GetNormalized()}" to export a function called "Main"`);
-        }
-  
-        // Invoke the Main function and save its return
-        this.#main = await mod.Main();
-
-        return resolve(this.#main);
-      })
-      .catch(cause =>
-      {
-        if (this.#start)
-        {
+        .then(async mod => {
           const stop = performance.now() - time;
-          const url = this.#start.GetNormalized();
-          const error = new Error(`Importing ${C.URL(url)} failed after ${C.Number(stop)} ms, last file resolved was ${C.URL(this.#last_entry_resolved?.GetNormalized())}`, { cause });
-  
-          return reject(error);
-        }
-        else
-        {
-          return reject(cause);
-        }
-      });
+
+          const loaded = [...this.#loaded].sort((a, b) => {
+            return a.GetBytes() - b.GetBytes();
+          });
+
+          let lines = 0;
+          let bytes = 0;
+          for (let i = 0; i < loaded.length; i++) {
+            const entry = loaded[i];
+            // console.log(i, entry.GetNormalized(), entry.GetBytes(), entry.GetLines());
+            lines += entry.GetLines();
+            bytes += entry.GetBytes();
+          }
+
+          console.log(`Resolved ${C.Number(this.#requests)} imports and loaded ${C.Number(lines)} lines (${C.Number(bytes / (1_000_000))}mb) from ${C.Number(loaded.length)} files after ${C.Number(stop)} ms`);
+
+          if (!Object.hasOwn(mod, "Main") || typeof (mod.Main) !== "function") {
+            throw new Error(`Expected the file "${this.#start.GetNormalized()}" to export a function called "Main"`);
+          }
+
+          // Invoke the Main function and save its return
+          this.#main = await mod.Main();
+
+          return resolve(this.#main);
+        })
+        .catch(cause => {
+          if (this.#start) {
+            const stop = performance.now() - time;
+            const url = this.#start.GetNormalized();
+            const error = new Error(`Importing ${C.URL(url)} failed after ${C.Number(stop)} ms, last file resolved was ${C.URL(this.#last_entry_resolved?.GetNormalized())}`, { cause });
+
+            return reject(error);
+          }
+          else {
+            return reject(cause);
+          }
+        });
     });
   }
 
-  LogLoaded()
-  {
+  LogLoaded() {
     const f = new Intl.NumberFormat();
 
-    const path  = this.Normalize(this.#start);
-    const time  = f.format(Math.round(this.stop - this.start));
+    const path = this.Normalize(this.#start);
+    const time = f.format(Math.round(this.stop - this.start));
     const chars = f.format(this.GetChars());
     const lines = f.format(this.GetLines());
-    const mb    = f.format(this.GetHeapUsed());
+    const mb = f.format(this.GetHeapUsed());
     const files = f.format(this.files);
 
     const {
@@ -487,21 +457,17 @@ export class Loader
     // console.log(`\nCode size: ${Green(code)}, bytecode size: ${Green(bytecode)}, external code size: ${Green(external)}`);
 
     let in_development = "";
-    if (this.development === true)
-    {
+    if (this.development === true) {
       in_development = ` in development mode`;
     }
 
-    if (this.GetLines() === 0)
-    {
+    if (this.GetLines() === 0) {
       console.log(`\nRoot ${Underline(Cyan(path))} imported ${Green(files)} files after ${Green(time)} ms using ${Green(mb)} mb${in_development}\n`);
     }
-    else
-    {
+    else {
       console.log(`\nRoot ${Underline(Cyan(path))} imported ${Green(lines)} lines of code from ${Green(files)} files after ${Green(time)} ms using ${Green(mb)} mb${in_development}\n`);
 
-      for (const layer of this.layers)
-      {
+      for (const layer of this.layers) {
         const name = layer.GetName();
         const lines = f.format(layer.GetLines());
         const chars = f.format(layer.GetChars());
@@ -513,10 +479,9 @@ export class Loader
     console.log();
   }
 
-  GetPackage(){ return this.#layers.at(0)?.GetPackage(); }
+  GetPackage() { return this.#layers.at(0)?.GetPackage(); }
 
-  IsStackTrusted(remove = this.IsStackTrusted)
-  {
+  IsStackTrusted(remove = this.IsStackTrusted) {
     const error = {};
     Error.captureStackTrace(error, remove);
     const stack = ErrorParser(error);
@@ -525,9 +490,8 @@ export class Loader
     const layers = this.GetLayers();
     const domains = this.GetDomains();
 
-    for (let i = 0; i < stack.length; i++)
-    {
-      const {name, file} = stack[i];
+    for (let i = 0; i < stack.length; i++) {
+      const { name, file } = stack[i];
 
       if (file.startsWith("node:internal/")) continue; // Node files are trusted
       if (file === SELF_URL) continue; // This Loader.js file is always trusted
@@ -537,10 +501,8 @@ export class Loader
 
       // Make sure that every other file in the stack is included in one of the layers
       let included = false;
-      for (let j = 0; j < layers.length; j++)
-      {
-        if (layers[j].Includes(query, domains))
-        {
+      for (let j = 0; j < layers.length; j++) {
+        if (layers[j].Includes(query, domains)) {
           included = true;
           break;
         }
@@ -552,8 +514,7 @@ export class Loader
     return true;
   }
 
-  async IsTrusted(remove = this.IsTrusted)
-  {
+  async IsTrusted(remove = this.IsTrusted) {
     const error = {};
     Error.captureStackTrace(error, remove);
 
@@ -565,13 +526,11 @@ export class Loader
     const domains = this.GetDomains();
 
     let trusted = true;
-    for (let i = 0; i < stack.length; i++)
-    {
-      const {name, file} = stack[i];
+    for (let i = 0; i < stack.length; i++) {
+      const { name, file } = stack[i];
       const entry = await layer.Query(file, domains);
 
-      if (!entry)
-      {
+      if (!entry) {
         trusted = false;
       }
     }
@@ -579,30 +538,25 @@ export class Loader
     return trusted;
   }
 
-  Trace(remove = this.Trace)
-  {
+  Trace(remove = this.Trace) {
     const error = {};
     Error.captureStackTrace(error, remove);
 
     return ErrorParser(error);
   }
 
-  TraceEntry(remove = this.TraceEntry)
-  {
+  TraceEntry(remove = this.TraceEntry) {
     const stack = this.Trace(remove);
     const last = stack[0];
 
     return this.Query(last.file);
   }
 
-  async IsTrustedStack()
-  {
-    try
-    {
+  async IsTrustedStack() {
+    try {
       throw new Error();
     }
-    catch (error)
-    {
+    catch (error) {
       // const {default: ErrorParser} = await import("/js/External/ErrorParser.js");
 
       const stack = ErrorParser(error);
@@ -613,13 +567,11 @@ export class Loader
       const domains = this.GetDomains();
 
       let trusted = true;
-      for (let i = 0; i < stack.length; i++)
-      {
-        const {name, file} = stack[i];
+      for (let i = 0; i < stack.length; i++) {
+        const { name, file } = stack[i];
         const entry = await layer.Query(file, domains);
 
-        if (!entry)
-        {
+        if (!entry) {
           trusted = false;
         }
       }
@@ -629,20 +581,16 @@ export class Loader
   }
 
   // TODO: Depreciate
-  Normalize(url)
-  {
-    if (typeof(url) === "string")
-    {
+  Normalize(url) {
+    if (typeof (url) === "string") {
       url = new URL(url);
     }
 
     const href = url.href;
     const domains = this.GetDomains();
-    for (let i = 0; i < domains.length; i++)
-    {
+    for (let i = 0; i < domains.length; i++) {
       const domain = `/${domains[i]}/`;
-      if (href.includes(domain))
-      {
+      if (href.includes(domain)) {
         const parts = href.split(domain);
         return "/" + parts[1];
       }
@@ -651,24 +599,22 @@ export class Loader
     throw new Error(`Failed to normalize url "${url.href}"`);
   }
 
-  GetConsoleColorsClass(){ return ConsoleColors; }
+  GetConsoleColorsClass() { return ConsoleColors; }
 
-  async DepreciateFile(url, replacement)
-  {
+  async DepreciateFile(url, replacement) {
     return this.Depreciate(url, replacement);
   }
 
-  GetOverrides(){ return this.#overrides; }
+  GetOverrides() { return this.#overrides; }
   // GetEntries(){ return Entries; }
-  GetFileConstructor(){ return File; }
-  GetDirectoryConstructor(){ return Directory; }
-  GetLayerConstructor(){ return Layer; }
-  GetPlaceholderConstructor(){ return Placeholder; }
+  GetFileConstructor() { return File; }
+  GetDirectoryConstructor() { return Directory; }
+  GetLayerConstructor() { return Layer; }
+  GetPlaceholderConstructor() { return Placeholder; }
 
-  Destructor(specifier, destructor)
-  {
-    if (typeof(specifier) !== "string") throw new Error(`The specifier parameter must be a string`);
-    if (typeof(destructor) !== "function") throw new Error(`The destructor parameter must be a function`);
+  Destructor(specifier, destructor) {
+    if (typeof (specifier) !== "string") throw new Error(`The specifier parameter must be a string`);
+    if (typeof (destructor) !== "function") throw new Error(`The destructor parameter must be a function`);
 
     const entry = this.Query(specifier);
     if (!entry) throw new Error(`Cannot schedule destructor, because no entry was found for specifier "${specifier}"`);
@@ -676,31 +622,27 @@ export class Loader
     return entry.AddDestructor(destructor);
   }
 
-  async Constructor(specifier, ctor)
-  {
-    if (typeof(specifier) !== "string") throw new Error(`The specifier parameter must be a string`);
-    if (typeof(ctor) !== "function") throw new Error(`The constructor parameter must be a function`);
+  async Constructor(specifier, ctor) {
+    if (typeof (specifier) !== "string") throw new Error(`The specifier parameter must be a string`);
+    if (typeof (ctor) !== "function") throw new Error(`The constructor parameter must be a function`);
 
     const entry = this.Query(specifier);
     if (!entry) throw new Error(`Cannot schedule constructor, because no entry was found for specifier "${specifier}"`);
 
     await entry.Await();
 
-    try
-    {
+    try {
       ctor(entry);
     }
-    catch (error)
-    {
+    catch (error) {
       console.error(error);
     }
 
     // return entry.AddConstructor(ctor);
   }
 
-  Depreciate(specifier, replacement)
-  {
-    if (typeof(specifier) !== "string") throw new Error(`The specifier parameter must be a string`);
+  Depreciate(specifier, replacement) {
+    if (typeof (specifier) !== "string") throw new Error(`The specifier parameter must be a string`);
 
     const entry = this.Query(specifier);
 
@@ -711,19 +653,16 @@ export class Loader
     if (replacement) parts.push(`\n  Use ${C.URL(replacement)} instead.`);
 
     const references = entry?.GetReferences();
-    if (references)
-    {
+    if (references) {
       parts.push(`\n\n  The following ${C.Number(references.size)} files import ${C.URL(entry.GetNormalized())}:\n`);
 
-      const refs = [...references].sort((a, b) =>
-      {
+      const refs = [...references].sort((a, b) => {
         const a_name = a.GetPathName();
         const b_name = b.GetPathName();
         return a_name.localeCompare(b_name);
       });
 
-      for (let i = 0; i < refs.length; i++)
-      {
+      for (let i = 0; i < refs.length; i++) {
         const ref = refs[i];
 
         parts.push("\n    ");
@@ -740,31 +679,26 @@ export class Loader
     return console.warn(...parts);
   }
 
-  Query(query, domains = this.GetDomains(), state = {})
-  {
-    if (typeof(domains) !== "object") throw new Error(`Expected domains to be an object`);
+  Query(query, domains = this.GetDomains(), state = {}) {
+    if (typeof (domains) !== "object") throw new Error(`Expected domains to be an object`);
     if (!(domains instanceof Array)) throw new Error(`Expected domains to be an array`);
 
-    if (typeof(query) === "string")
-    {
+    if (typeof (query) === "string") {
       query = new Query(query);
     }
-    else if (query instanceof globalThis.URL)
-    {
+    else if (query instanceof globalThis.URL) {
       query = new Query(query.href);
     }
 
     // Iterate each layer
     const layers = this.GetLayers();
-    for (let i = 0; i < layers.length; i++)
-    {
+    for (let i = 0; i < layers.length; i++) {
       const entry = layers[i].Query(query, domains, state);
       if (entry) return entry;
     }
   }
 
-  ResolveNull()
-  {
+  ResolveNull() {
     return {
       shortCircuit: true,
       format: "module",
@@ -772,8 +706,7 @@ export class Loader
     };
   }
 
-  ResolveError()
-  {
+  ResolveError() {
     return {
       shortCircuit: true,
       format: "module",
@@ -781,8 +714,7 @@ export class Loader
     };
   }
 
-  async ResolveResolved(parent)
-  {
+  async ResolveResolved(parent) {
     if (parent.IsVolatile()) return this.ResolveNull(parent);
 
     this.index ??= 0;
@@ -810,8 +742,7 @@ export class Loader
     };
   }
 
-  async ResolveResolved(parent)
-  {
+  async ResolveResolved(parent) {
     if (parent.IsVolatile()) return this.ResolveNull(parent);
 
     const url = await parent.Resolve();
@@ -824,8 +755,7 @@ export class Loader
     };
   }
 
-  async ResolveResolved(parent)
-  {
+  async ResolveResolved(parent) {
     // return this.ResolveNull();
 
     return {
@@ -835,33 +765,27 @@ export class Loader
     };
   }
 
-  OnLoaded()
-  {
-    for (const entry of this.#unresolved)
-    {
+  OnLoaded() {
+    for (const entry of this.#unresolved) {
       // console.log("OnLoaded", entry);
       this.#unresolved.delete(entry);
     }
   }
 
   // QUESTION: Should static files import by their etag instead of their instance?
-  async OnResolve(specifier, context, default_resolver)
-  {
-    if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import"))
-    {
+  async OnResolve(specifier, context, default_resolver) {
+    if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import")) {
       console.warn("Unexpected import conditions", context.conditions, "on import", specifier);
     }
 
-    if (specifier === "@self")
-    {
+    if (specifier === "@self") {
       return {
         shortCircuit: true,
         format: "module",
         url: context.parentURL,
       };
     }
-    else if (specifier === "@register")
-    {
+    else if (specifier === "@register") {
       return {
         shortCircuit: true,
         format: "module",
@@ -871,13 +795,11 @@ export class Loader
 
     this.#requests += 1;
 
-    if (this.data.resolve_skips.has(specifier))
-    {
+    if (this.data.resolve_skips.has(specifier)) {
       const resolved = await default_resolver(specifier, context, default_resolver);
-      
+
       // If we are in Contextify mode and it's a commonjs module
-      if (this.IsContextifying() && resolved.format === "commonjs")
-      {
+      if (this.IsContextifying() && resolved.format === "commonjs") {
         // console.log(specifier);
 
         // Then grab the importer File and resolve to it with the appropriate query parameters
@@ -905,24 +827,20 @@ export class Loader
     this.#prev_parent_url = parent_url;
 
     const is_resolved = !this.#unresolved.has(parent_url);
-    if (prev_parent_url && parent_url !== prev_parent_url && this.#unresolved.has(prev_parent_url))
-    {
+    if (prev_parent_url && parent_url !== prev_parent_url && this.#unresolved.has(prev_parent_url)) {
       this.#unresolved.delete(prev_parent_url);
     }
 
     let parent;
     let entry;
-    if (typeof(parent_url) === "string")
-    {
+    if (typeof (parent_url) === "string") {
       parent = this.Query(parent_query);
 
-      if (!parent)
-      {
+      if (!parent) {
         parent = this.#parent_map.get(parent_url);
       }
 
-      if (!parent && !parent_url.endsWith("/taggly/Start.js"))
-      {
+      if (!parent && !parent_url.endsWith("/taggly/Start.js")) {
         // The reason for this is that the parent can be used to check if
         // a certain import is allowed.
         // If there isn't a parent, we can't do that.
@@ -934,20 +852,16 @@ export class Loader
       this.#last_entry_resolved = parent;
     }
 
-    if (specifier.startsWith("/flag#"))
-    {
-      if (!this.CountFlagRequests())
-      {
+    if (specifier.startsWith("/flag#")) {
+      if (!this.CountFlagRequests()) {
         this.#requests -= 1;
       }
 
       const anchor = query.GetAnchor();
-      if (anchor)
-      {
+      if (anchor) {
         parent.Flag(anchor);
 
-        if (anchor === "resolved")
-        {
+        if (anchor === "resolved") {
           // // console.log("Resolved", parent.GetNormalized());
           return this.ResolveResolved(parent);
         }
@@ -957,29 +871,24 @@ export class Loader
     }
 
     // Absolute path, or node/browser style relative path
-    if (specifier.startsWith("/") || specifier.startsWith(".") || specifier.startsWith("file:///"))
-    {
+    if (specifier.startsWith("/") || specifier.startsWith(".") || specifier.startsWith("file:///")) {
       entry = this.Query(query, undefined, { parent });
 
-      if (!entry)
-      {
+      if (!entry) {
         throw new Error(`Failed to import a file or directory for specifier "${specifier}" from "${parent?.GetNormalized() ?? "UNKNOWN PARENT"}"`);
       }
 
-      if (entry.IsIncremented())
-      {
+      if (entry.IsIncremented()) {
         await entry.Reload();
       }
 
-      if (is_resolved)
-      {
+      if (is_resolved) {
         // console.log(parent.GetNormalized(), "is resolved, so", specifier, "must be dynamic?");
       }
 
       await entry.ValidateImportFrom(parent);
 
-      if (parent && (parent !== this.#loader) && !query.HasIgnore())
-      {
+      if (parent && (parent !== this.#loader) && !query.HasIgnore()) {
         await entry.AddReference(parent);
         await parent.AddImport(entry);
       }
@@ -996,23 +905,19 @@ export class Loader
     return await default_resolver(specifier, context, default_resolver);
   }
 
-  OnResolveSync(specifier, context, default_resolver)
-  {
-    if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import"))
-    {
+  OnResolveSync(specifier, context, default_resolver) {
+    if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import")) {
       console.warn("Unexpected import conditions", context.conditions, "on import", specifier);
     }
 
-    if (specifier === "@self")
-    {
+    if (specifier === "@self") {
       return {
         shortCircuit: true,
         format: "module",
         url: context.parentURL,
       };
     }
-    else if (specifier === "@register")
-    {
+    else if (specifier === "@register") {
       return {
         shortCircuit: true,
         format: "module",
@@ -1022,13 +927,11 @@ export class Loader
 
     this.#requests += 1;
 
-    if (this.data.resolve_skips.has(specifier))
-    {
+    if (this.data.resolve_skips.has(specifier)) {
       const resolved = default_resolver(specifier, context, default_resolver);
-      
+
       // If we are in Contextify mode and it's a commonjs module
-      if (this.IsContextifying() && resolved.format === "commonjs")
-      {
+      if (this.IsContextifying() && resolved.format === "commonjs") {
         // console.log(specifier);
 
         // Then grab the importer File and resolve to it with the appropriate query parameters
@@ -1056,24 +959,20 @@ export class Loader
     this.#prev_parent_url = parent_url;
 
     const is_resolved = !this.#unresolved.has(parent_url);
-    if (prev_parent_url && parent_url !== prev_parent_url && this.#unresolved.has(prev_parent_url))
-    {
+    if (prev_parent_url && parent_url !== prev_parent_url && this.#unresolved.has(prev_parent_url)) {
       this.#unresolved.delete(prev_parent_url);
     }
 
     let parent;
     let entry;
-    if (typeof(parent_url) === "string")
-    {
+    if (typeof (parent_url) === "string") {
       parent = this.Query(parent_query);
 
-      if (!parent)
-      {
+      if (!parent) {
         parent = this.#parent_map.get(parent_url);
       }
 
-      if (!parent && !parent_url.endsWith("/taggly/Start.js"))
-      {
+      if (!parent && !parent_url.endsWith("/taggly/Start.js")) {
         // The reason for this is that the parent can be used to check if
         // a certain import is allowed.
         // If there isn't a parent, we can't do that.
@@ -1085,20 +984,16 @@ export class Loader
       this.#last_entry_resolved = parent;
     }
 
-    if (specifier.startsWith("/flag#"))
-    {
-      if (!this.CountFlagRequests())
-      {
+    if (specifier.startsWith("/flag#")) {
+      if (!this.CountFlagRequests()) {
         this.#requests -= 1;
       }
 
       const anchor = query.GetAnchor();
-      if (anchor)
-      {
+      if (anchor) {
         parent.Flag(anchor);
 
-        if (anchor === "resolved")
-        {
+        if (anchor === "resolved") {
           // // console.log("Resolved", parent.GetNormalized());
           return this.ResolveResolved(parent);
         }
@@ -1108,29 +1003,24 @@ export class Loader
     }
 
     // Absolute path, or node/browser style relative path
-    if (specifier.startsWith("/") || specifier.startsWith(".") || specifier.startsWith("file:///"))
-    {
+    if (specifier.startsWith("/") || specifier.startsWith(".") || specifier.startsWith("file:///")) {
       entry = this.Query(query, undefined, { parent });
 
-      if (!entry)
-      {
+      if (!entry) {
         throw new Error(`Failed to import a file or directory for specifier "${specifier}" from "${parent?.GetNormalized() ?? "UNKNOWN PARENT"}"`);
       }
 
-      if (entry.IsIncremented())
-      {
+      if (entry.IsIncremented()) {
         entry.ReloadSync();
       }
 
-      if (is_resolved)
-      {
+      if (is_resolved) {
         // console.log(parent.GetNormalized(), "is resolved, so", specifier, "must be dynamic?");
       }
 
       entry.ValidateImportFrom(parent);
 
-      if (parent && (parent !== this.#loader) && !query.HasIgnore())
-      {
+      if (parent && (parent !== this.#loader) && !query.HasIgnore()) {
         entry.AddReference(parent);
         parent.AddImport(entry);
       }
@@ -1147,13 +1037,11 @@ export class Loader
     return default_resolver(specifier, context, default_resolver);
   }
 
-  Import(specifier)
-  {
+  Import(specifier) {
     return import(specifier);
   }
 
-  async OnError(error)
-  {
+  async OnError(error) {
   }
 
   // async OnStartError(error)
@@ -1169,8 +1057,7 @@ export class Loader
   //   console.error(error.toString());
   // }
 
-  OnStartError(error)
-  {
+  OnStartError(error) {
     // console.log("~~START ERROR~~");
     // console.error(error);
     // // throw error;
@@ -1179,8 +1066,7 @@ export class Loader
     console.error(string);
   }
 
-  FormatHelper(error, type, builder)
-  {
+  FormatHelper(error, type, builder) {
     builder.NL();
     builder.NL().RedBright(type).Add(": ").White(error.message);
 
@@ -1193,8 +1079,7 @@ export class Loader
 
     builder.In();
 
-    for (const {name, file, line, column} of stack)
-    {
+    for (const { name, file, line, column } of stack) {
       // if (file.startsWith("node:internal/")) continue;
 
       const entry = this.Query(file);
@@ -1204,18 +1089,15 @@ export class Loader
 
       builder.Add("line ").Number(line).Add(" and column ").Number(column).Add(" in file ");
 
-      if (entry)
-      {
+      if (entry) {
         builder.URL(entry.GetNormalized());
       }
-      else
-      {
+      else {
         builder.URL(file);
       }
     }
 
-    if (error.cause)
-    {
+    if (error.cause) {
       this.FormatHelper(error.cause, error.cause.name ?? error.cause.constructor.name, builder);
     }
 
@@ -1225,8 +1107,7 @@ export class Loader
     return builder;
   }
 
-  FormatError(error, type = error.name ?? error.constructor.name)
-  {
+  FormatError(error, type = error.name ?? error.constructor.name) {
     const builder = new StringBuilder();
     this.FormatHelper(error, type, builder);
     // builder.NL();
@@ -1234,11 +1115,10 @@ export class Loader
     return builder.Render();
   }
 
-  async OnResolveError(error)
-  {
+  async OnResolveError(error) {
     const string = this.FormatError(error, "Resolve Error");
     console.error(string);
-    
+
     // import("/js/Error.js")
     // .then(mod =>
     // {
@@ -1261,16 +1141,13 @@ export class Loader
     return this.ResolveNull();
   }
 
-  OnLoadError(error, url, context)
-  {
+  OnLoadError(error, url, context) {
     console.log("~~LOAD ERROR~~");
     // console.error(error);
   }
 
-  GetEscape(code)
-  {
-    switch (code)
-    {
+  GetEscape(code) {
+    switch (code) {
       case 0: return "\\x00";
       case 8: return "\\x08";
       case 9: return "\\x09";
@@ -1285,46 +1162,37 @@ export class Loader
     }
   }
 
-  async EscapeEntryData(entry, data)
-  {
+  async EscapeEntryData(entry, data) {
     if (!data) return data;
     const type = await entry.GetMimeType();
 
-    if (type === "text/javascript" || type === "application/json")
-    {
+    if (type === "text/javascript" || type === "application/json") {
       return data;
     }
 
     const reader = new TagglyBuffer(data);
     const writer = new TagglyBuffer(reader.GetSize());
 
-    while (!reader.IsAtEnd())
-    {
+    while (!reader.IsAtEnd()) {
       const c1 = reader.ReadU8();
 
-      if (c1 < 128)
-      {
+      if (c1 < 128) {
         const value = this.GetEscape(c1);
-        if (value)
-        {
+        if (value) {
           // console.log("Encoding", value);
-          for (let i = 0; i < value.length; i++)
-          {
+          for (let i = 0; i < value.length; i++) {
             writer.WriteU8(value[i].charCodeAt());
           }
         }
-        else
-        {
+        else {
           writer.WriteU8(c1);
         }
       }
-      else if (c1 > 191 && c1 < 224)
-      {
+      else if (c1 > 191 && c1 < 224) {
         const c2 = reader.ReadU8();
         writer.WriteU16((c1 & 31) << 6 | c2 & 63);
       }
-      else if (c1 > 239 && c1 < 365)
-      {
+      else if (c1 > 239 && c1 < 365) {
         // Surrogate Pair
         const c2 = reader.ReadU8();
         const c3 = reader.ReadU8();
@@ -1335,8 +1203,7 @@ export class Loader
         writer.WriteU16(0xD800 + (u >> 10));
         writer.WriteU16(0xDC00 + (u & 1023));
       }
-      else
-      {
+      else {
         const c2 = reader.ReadU8();
         const c3 = reader.ReadU8();
 
@@ -1348,70 +1215,64 @@ export class Loader
     return new Uint8Array(writer.GetBuffer());
   }
 
-  async FormatEntryData(entry, data)
-  {
+  async FormatEntryData(entry, data) {
     if (!data) return data;
 
-    switch (await entry.GetMimeType())
-    {
+    switch (await entry.GetMimeType()) {
       case "text/javascript":
-      {
-        return data; // Unchanged
-      }
+        {
+          return data; // Unchanged
+        }
 
       // TODO: These need to perform encoding to work...
       case "text/html":
-      {
-        return Buffer.concat([
-          HTML_BUFFER,
-          data,
-          END_BUFFER,
-        ]);
-      }
+        {
+          return Buffer.concat([
+            HTML_BUFFER,
+            data,
+            END_BUFFER,
+          ]);
+        }
       case "text/css":
-      {
-        return Buffer.concat([
-          CSS_BUFFER,
-          data,
-          END_BUFFER,
-        ]);
-      }
+        {
+          return Buffer.concat([
+            CSS_BUFFER,
+            data,
+            END_BUFFER,
+          ]);
+        }
       case "application/json":
-      {
-        return Buffer.concat([
-          JSON_BUFFER,
-          data,
-        ]);
-      }
+        {
+          return Buffer.concat([
+            JSON_BUFFER,
+            data,
+          ]);
+        }
       default:
-      {
-        return Buffer.concat([
-          DEFAULT_BUFFER,
-          data,
-          Buffer.from("\";"),
-        ]);
-      }
+        {
+          return Buffer.concat([
+            DEFAULT_BUFFER,
+            data,
+            Buffer.from("\";"),
+          ]);
+        }
     }
   }
 
-  async GetEntryData(entry)
-  {
+  async GetEntryData(entry) {
     const data = await entry.GetData();
 
     // Use a cached version, if it exists
-    if (this.#formatted_data.has(data))
-    {
+    if (this.#formatted_data.has(data)) {
       return this.#formatted_data.get(data);
     }
 
-    if (data)
-    {
+    if (data) {
       let result = data;
       result = await this.EscapeEntryData(entry, result);
       result = await this.FormatEntryData(entry, result);
 
-      if (result && result !== data)
-      {
+      if (result && result !== data) {
         // console.log("Caching", new TextDecoder().decode(result));
 
         // If we performed any formatting, then cache the formatted data for performance
@@ -1421,8 +1282,7 @@ export class Loader
       }
     }
 
-    if (this.UseResolvedFlag() && entry.IsPublic())
-    {
+    if (this.UseResolvedFlag() && entry.IsPublic()) {
       // const resolved = await entry.Resolve();
       // const specifier = await entry.GetSpecifier();
       // console.log("Resolving", `import "${specifier}";`);
@@ -1440,42 +1300,36 @@ export class Loader
         // RESOLVED_FLAG,
       ]);
     }
-    else
-    {
+    else {
       return data;
     }
   }
 
-  Sleep(ms){ return new Promise(resolve => globalThis.setTimeout(resolve, ms)); }
+  Sleep(ms) { return new Promise(resolve => globalThis.setTimeout(resolve, ms)); }
 
-  async OnLoad(url, context, default_load)
-  {
-    if (context.format === "module" && url.startsWith("file:/"))
-    {
+  async OnLoad(url, context, default_load) {
+    if (context.format === "module" && url.startsWith("file:/")) {
       const query = new Query(url);
       const entry = this.Query(query);
       entry?.Assert();
 
       this.#last_entry_loaded = entry;
 
-      if (entry)
-      {
+      if (entry) {
         entry.Load();
 
         this.#unresolved.add(url);
 
         // console.log("Importing", entry.GetNormalized(), entry.GetImports().size, context);
 
-        if (query.HasFlag())
-        {
+        if (query.HasFlag()) {
           const flag = query.GetFlag();
           const resolved = await entry.Resolve(entry);
           const href = resolved.href;
           // const href = new URL(url).searchParams.get("url");
           // console.log("Resolved!", href);
 
-          if (entry.IsVolatile())
-          {
+          if (entry.IsVolatile()) {
             return {
               format: "module",
               responseURL: url,
@@ -1483,7 +1337,7 @@ export class Loader
               source: "",
             };
           }
-    
+
           return {
             format: "module",
             responseURL: url,
@@ -1502,8 +1356,7 @@ export class Loader
           };
         }
 
-        if (this.IsWrapping() && query.HasWrapper())
-        {
+        if (this.IsWrapping() && query.HasWrapper()) {
           const resolved = await entry.Resolve(entry);
           const href = resolved.href;
 
@@ -1534,8 +1387,7 @@ export class Loader
 
         // console.log(entry.GetNormalized());
 
-        if (data)
-        {
+        if (data) {
           this.#lines += entry.GetLines();
           this.#loaded.add(entry);
 
@@ -1567,37 +1419,30 @@ export class Loader
     return default_load(url, context, default_load);
   }
 
-  OnMessage(message)
-  {
+  OnMessage(message) {
     let actions;
-    try
-    {
+    try {
       actions = JSON.parse(message);
       this.Apply(...actions);
     }
-    catch (error)
-    {
+    catch (error) {
       console.warn(`Failed to parse message "${message}" as JSON`);
       console.error(error);
     }
   }
 
-  OnUncaughtException(...args)
-  {
+  OnUncaughtException(...args) {
     // console.log(args);
   }
 
-  Reload(force = false, throws = false, hard = false)
-  {
-    if (force !== true && this.GetReloadable() !== true)
-    {
+  Reload(force = false, throws = false, hard = false) {
+    if (force !== true && this.GetReloadable() !== true) {
       return false;
     }
 
     const old_promise = this.GetReloadPromise();
 
-    const reload_promise = new Promise(async (resolve, reject) =>
-    {
+    const reload_promise = new Promise(async (resolve, reject) => {
       this.SetReloadable(false); // This should happen ASAP so that we don't reload multiple times
 
       await this.#loading;
@@ -1616,34 +1461,28 @@ export class Loader
 
       this.data.instance += 1;
 
-      try
-      {
-        if (this.#main)
-        {
+      try {
+        if (this.#main) {
           this.#main();
           this.#main = undefined;
         }
 
-        if (hard === true)
-        {
+        if (hard === true) {
           this.#start.Reimport();
         }
 
         // Attempt to reimport the loader, which will only happen if it has been incremented
         const mod = await import("/js/Loader.js");
-        if (!Object.hasOwn(mod, "Loader"))
-        {
+        if (!Object.hasOwn(mod, "Loader")) {
           throw new Error(`Expected "/js/Loader.js" to export a Loader class`);
         }
 
         const loader = mod.Loader.Get();
-        
-        try
-        {
+
+        try {
           await loader.Start();
         }
-        catch (error)
-        {
+        catch (error) {
           loader.OnStartError(error);
           return resolve(false);
         }
@@ -1657,8 +1496,7 @@ export class Loader
 
         return resolve(true);
       }
-      catch (error)
-      {
+      catch (error) {
         const parts = [];
         // parts.push(C.Error("\nCompilation error:"));
         parts.push("\nCompilation error:");
@@ -1667,17 +1505,14 @@ export class Loader
 
         console.error(...parts);
 
-        if (throws === true)
-        {
+        if (throws === true) {
           return reject(error);
         }
-        else
-        {
+        else {
           return resolve(false); // Should this always reject?
         }
       }
-      finally
-      {
+      finally {
         // this.stop = performance.now();
 
         // console.log("Skipping log...");
@@ -1692,140 +1527,135 @@ export class Loader
     return reload_promise;
   }
 
-  OnReload()
-  {
+  OnReload() {
     this.Reload(true, false, false);
   }
 
-  OnHardReload()
-  {
+  OnHardReload() {
     this.Reload(true, false, true);
   }
 
-  OnKeyBackspace(){}
-  OnKeySpace(){}
-  OnKeyTab(){}
-  OnKeyEnter(){}
-  OnKeyShift(){}
-  OnKeyCtrl(){}
-  OnKeyAlt(){}
-  OnKeyPause(){}
-  OnKeyCapsLock(){}
-  OnKeyEscape(){}
-  OnKeyPageUp(){}
-  OnKeyPageUp(){}
-  OnKeyPageDown(){}
-  OnKeyEnd(){}
-  OnKeyHome(){}
-  OnKeyLeftArrow(){}
-  OnKeyUpArrow(){}
-  OnKeyRightArrow(){}
-  OnKeyDownArrow(){}
-  OnKeyInsert(){}
-  OnKeyDelete(){}
-  OnKey0(){}
-  OnKey1(){}
-  OnKey2(){}
-  OnKey3(){}
-  OnKey4(){}
-  OnKey5(){}
-  OnKey6(){}
-  OnKey7(){}
-  OnKey8(){}
-  OnKey9(){}
-  OnKeyA(){}
-  OnKeyB(){}
-  OnKeyC(key){}
-  OnKeyD(){}
-  OnKeyE(){}
-  OnKeyF(){}
-  OnKeyG(){}
-  OnKeyH(){}
-  OnKeyI(){}
-  OnKeyJ(){}
-  OnKeyK(){}
-  OnKeyL(){}
-  OnKeyM(){}
-  OnKeyN(){}
-  OnKeyO(){}
-  OnKeyP(){}
-  OnKeyQ(){}
-  OnKeyR(){}
-  OnKeyS(){}
-  OnKeyT(){}
-  OnKeyU(){}
-  OnKeyV(){}
-  OnKeyW(){}
-  OnKeyX(){}
-  OnKeyY(){}
-  OnKeyZ(){}
-  OnKeyLeftWindowKey(){}
-  OnKeyRightWindowKey(){}
-  OnKeySelectKey(){}
-  OnKeyNumpad0(){}
-  OnKeyNumpad1(){}
-  OnKeyNumpad2(){}
-  OnKeyNumpad3(){}
-  OnKeyNumpad4(){}
-  OnKeyNumpad5(){}
-  OnKeyNumpad6(){}
-  OnKeyNumpad7(){}
-  OnKeyNumpad8(){}
-  OnKeyNumpad9(){}
-  OnKeyMultiply(){}
-  OnKeyAdd(){}
-  OnKeySubtract(){}
-  OnKeyDecimalPoint(){}
-  OnKeyDivide(){}
-  OnKeyF1(){}
-  OnKeyF2(){}
-  OnKeyF3(){}
-  OnKeyF4(){}
-  OnKeyF5(){}
-  OnKeyF6(){}
-  OnKeyF7(){}
-  OnKeyF8(){}
-  OnKeyF9(){}
-  OnKeyF10(){}
-  OnKeyF11(){}
-  OnKeyF12(){}
-  OnKeyNumLock(){}
-  OnKeyScrollLock(){}
-  OnAudioVolumeMute(){}
-  OnAudioVolumeDown(){}
-  OnAudioVolumeUp(){}
-  OnLaunchMediaPlayer(){}
-  OnLaunchApplication1(){}
-  OnLaunchApplication2(){}
-  OnKeySemiColon(){}
-  OnKeyColon(){}
-  OnKeyEqualSign(){}
-  OnKeyComma(){}
-  OnKeyDash(){}
-  OnKeyPeriod(){}
-  OnKeyForwardSlash(){}
-  OnKeyGraveAccent(){}
-  OnKeyOpenBracket(){}
-  OnKeyBackSlash(){}
-  OnKeyCloseBracket(){}
-  OnKeySingleQuote(){}
-  OnKeyDoubleQuote(){}
-  OnKeyBackQuote(){}
-  OnKeyUnknown(key){ console.log("Unknown key", key); }
+  OnKeyBackspace() { }
+  OnKeySpace() { }
+  OnKeyTab() { }
+  OnKeyEnter() { }
+  OnKeyShift() { }
+  OnKeyCtrl() { }
+  OnKeyAlt() { }
+  OnKeyPause() { }
+  OnKeyCapsLock() { }
+  OnKeyEscape() { }
+  OnKeyPageUp() { }
+  OnKeyPageUp() { }
+  OnKeyPageDown() { }
+  OnKeyEnd() { }
+  OnKeyHome() { }
+  OnKeyLeftArrow() { }
+  OnKeyUpArrow() { }
+  OnKeyRightArrow() { }
+  OnKeyDownArrow() { }
+  OnKeyInsert() { }
+  OnKeyDelete() { }
+  OnKey0() { }
+  OnKey1() { }
+  OnKey2() { }
+  OnKey3() { }
+  OnKey4() { }
+  OnKey5() { }
+  OnKey6() { }
+  OnKey7() { }
+  OnKey8() { }
+  OnKey9() { }
+  OnKeyA() { }
+  OnKeyB() { }
+  OnKeyC(key) { }
+  OnKeyD() { }
+  OnKeyE() { }
+  OnKeyF() { }
+  OnKeyG() { }
+  OnKeyH() { }
+  OnKeyI() { }
+  OnKeyJ() { }
+  OnKeyK() { }
+  OnKeyL() { }
+  OnKeyM() { }
+  OnKeyN() { }
+  OnKeyO() { }
+  OnKeyP() { }
+  OnKeyQ() { }
+  OnKeyR() { }
+  OnKeyS() { }
+  OnKeyT() { }
+  OnKeyU() { }
+  OnKeyV() { }
+  OnKeyW() { }
+  OnKeyX() { }
+  OnKeyY() { }
+  OnKeyZ() { }
+  OnKeyLeftWindowKey() { }
+  OnKeyRightWindowKey() { }
+  OnKeySelectKey() { }
+  OnKeyNumpad0() { }
+  OnKeyNumpad1() { }
+  OnKeyNumpad2() { }
+  OnKeyNumpad3() { }
+  OnKeyNumpad4() { }
+  OnKeyNumpad5() { }
+  OnKeyNumpad6() { }
+  OnKeyNumpad7() { }
+  OnKeyNumpad8() { }
+  OnKeyNumpad9() { }
+  OnKeyMultiply() { }
+  OnKeyAdd() { }
+  OnKeySubtract() { }
+  OnKeyDecimalPoint() { }
+  OnKeyDivide() { }
+  OnKeyF1() { }
+  OnKeyF2() { }
+  OnKeyF3() { }
+  OnKeyF4() { }
+  OnKeyF5() { }
+  OnKeyF6() { }
+  OnKeyF7() { }
+  OnKeyF8() { }
+  OnKeyF9() { }
+  OnKeyF10() { }
+  OnKeyF11() { }
+  OnKeyF12() { }
+  OnKeyNumLock() { }
+  OnKeyScrollLock() { }
+  OnAudioVolumeMute() { }
+  OnAudioVolumeDown() { }
+  OnAudioVolumeUp() { }
+  OnLaunchMediaPlayer() { }
+  OnLaunchApplication1() { }
+  OnLaunchApplication2() { }
+  OnKeySemiColon() { }
+  OnKeyColon() { }
+  OnKeyEqualSign() { }
+  OnKeyComma() { }
+  OnKeyDash() { }
+  OnKeyPeriod() { }
+  OnKeyForwardSlash() { }
+  OnKeyGraveAccent() { }
+  OnKeyOpenBracket() { }
+  OnKeyBackSlash() { }
+  OnKeyCloseBracket() { }
+  OnKeySingleQuote() { }
+  OnKeyDoubleQuote() { }
+  OnKeyBackQuote() { }
+  OnKeyUnknown(key) { console.log("Unknown key", key); }
 
-  OnKeyE(key){ if (key.ctrl) this.OnHardReload(); }
-  OnKeyR(key){ if (key.ctrl) this.OnReload(); }
+  OnKeyE(key) { if (key.ctrl) this.OnHardReload(); }
+  OnKeyR(key) { if (key.ctrl) this.OnReload(); }
 
-  Remap(key, name)
-  {
+  Remap(key, name) {
     key.name = name;
     return this.OnKey(key);
   }
 
-  OnKey(key)
-  {
-    switch (key.name)
-    {
+  OnKey(key) {
+    switch (key.name) {
       case "backspace": return this.OnKeyBackspace(key);
       case "space": return this.OnKeySpace(key);
       case "tab": return this.OnKeyTab(key);
@@ -1957,57 +1787,54 @@ export class Loader
       case "and":
       case "tilde":
       case "minus":
-      {
-        return; // Ignore these for now cause I'm lazy
-      }
-      default:
-      {
-        switch (key.sequence)
         {
-          case "'": return this.Remap(key, "singlequote");
-          case "\"": return this.Remap(key, "doublequote");
-          case "\`": return this.Remap(key, "backquote");
-          case ",": return this.Remap(key, "comma");
-          case ".": return this.Remap(key, "period");
-          case "/": return this.Remap(key, "forwardslash");
-          case "\\": return this.Remap(key, "backslash");
-          case ";": return this.Remap(key, "semicolon");
-          case ":": return this.Remap(key, "colon");
-          case "(": return this.Remap(key, "openparenthesis");
-          case ")": return this.Remap(key, "closeparenthesis");
-          case "[": return this.Remap(key, "openbracket");
-          case "]": return this.Remap(key, "closebracket");
-          case "{": return this.Remap(key, "opencurlybracket");
-          case "}": return this.Remap(key, "closecurlybracket");
-          case ">": return this.Remap(key, "greaterthan");
-          case "<": return this.Remap(key, "lessthan");
-          case "%": return this.Remap(key, "percent");
-          case "+": return this.Remap(key, "plus");
-          case "_": return this.Remap(key, "underscore");
-          case "!": return this.Remap(key, "exclamation");
-          case "?": return this.Remap(key, "question");
-          case "^": return this.Remap(key, "carat");
-          case "#": return this.Remap(key, "hash");
-          case "@": return this.Remap(key, "at");
-          case "*": return this.Remap(key, "asterisk");
-          case "&": return this.Remap(key, "and");
-          case "~": return this.Remap(key, "tilde");
-          case "-": return this.Remap(key, "minus");
-          default: return this.OnKeyUnknown(key);
+          return; // Ignore these for now cause I'm lazy
         }
-      }
+      default:
+        {
+          switch (key.sequence) {
+            case "'": return this.Remap(key, "singlequote");
+            case "\"": return this.Remap(key, "doublequote");
+            case "\`": return this.Remap(key, "backquote");
+            case ",": return this.Remap(key, "comma");
+            case ".": return this.Remap(key, "period");
+            case "/": return this.Remap(key, "forwardslash");
+            case "\\": return this.Remap(key, "backslash");
+            case ";": return this.Remap(key, "semicolon");
+            case ":": return this.Remap(key, "colon");
+            case "(": return this.Remap(key, "openparenthesis");
+            case ")": return this.Remap(key, "closeparenthesis");
+            case "[": return this.Remap(key, "openbracket");
+            case "]": return this.Remap(key, "closebracket");
+            case "{": return this.Remap(key, "opencurlybracket");
+            case "}": return this.Remap(key, "closecurlybracket");
+            case ">": return this.Remap(key, "greaterthan");
+            case "<": return this.Remap(key, "lessthan");
+            case "%": return this.Remap(key, "percent");
+            case "+": return this.Remap(key, "plus");
+            case "_": return this.Remap(key, "underscore");
+            case "!": return this.Remap(key, "exclamation");
+            case "?": return this.Remap(key, "question");
+            case "^": return this.Remap(key, "carat");
+            case "#": return this.Remap(key, "hash");
+            case "@": return this.Remap(key, "at");
+            case "*": return this.Remap(key, "asterisk");
+            case "&": return this.Remap(key, "and");
+            case "~": return this.Remap(key, "tilde");
+            case "-": return this.Remap(key, "minus");
+            default: return this.OnKeyUnknown(key);
+          }
+        }
     }
   }
 
-  Apply(action, args)
-  {
-    switch (action)
-    {
+  Apply(action, args) {
+    switch (action) {
       case "KEY": return this.OnKey(...args);
       default:
-      {
-        // console.warn("Unknown action", action, args);
-      }
+        {
+          // console.warn("Unknown action", action, args);
+        }
     }
   }
 }

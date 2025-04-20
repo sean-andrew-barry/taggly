@@ -1,25 +1,21 @@
 import "/flag#dangerous";
 // import "/flag#frozen";
 
-import FS, {promises as FSP} from "node:fs";
-import {Entry} from "/js/FileSystem/Entry.js";
-import {File} from "/js/FileSystem/Entry/File.js";
-import {Placeholder} from "/js/FileSystem/Entry/Placeholder.js";
+import FS, { promises as FSP } from "node:fs";
+import { Entry } from "/js/FileSystem/Entry.js";
+import { File } from "/js/FileSystem/Entry/File.js";
+import { Placeholder } from "/js/FileSystem/Entry/Placeholder.js";
 
 const SOURCE = Symbol("source");
 
-export class Directory extends Entry
-{
+export class Directory extends Entry {
   #children = new Map();
-  
-  constructor(source, parent)
-  {
+
+  constructor(source, parent) {
     super(source, parent);
 
-    if (source.IsDirectory?.())
-    {
-      for (const [name, child] of source.GetChildren())
-      {
+    if (source.IsDirectory?.()) {
+      for (const [name, child] of source.GetChildren()) {
         const rebuilt = this.Rebuild(child);
         rebuilt.SetParent(this);
 
@@ -28,54 +24,43 @@ export class Directory extends Entry
     }
   }
 
-  GetChildren(){ return this.#children; }
+  GetChildren() { return this.#children; }
 
-  async Initialize()
-  {
-    for (const name of await FSP.readdir(this))
-    {
+  async Initialize() {
+    for (const name of await FSP.readdir(this)) {
       const child = await this.FindChild(name);
 
-      if (child)
-      {
+      if (child) {
         child.Initialize();
       }
     }
   }
 
-  GetEntryNames()
-  {
-    return new Promise((resolve, reject) =>
-    {
-      FS.readdir(this, (error, files) =>
-      {
+  GetEntryNames() {
+    return new Promise((resolve, reject) => {
+      FS.readdir(this, (error, files) => {
         if (error) return reject(error);
         else resolve(files);
       });
     });
   }
 
-  GetEntries()
-  {
-    return this.GetEntryNames().then(names =>
-    {
+  GetEntries() {
+    return this.GetEntryNames().then(names => {
       // console.log("Got entries", names);
       return Promise.all(names.map(name => this.GetChild(name)));
     });
   }
 
-  FindChild(name, directory_ctor = Directory, file_ctor = File)
-  {
-    if (typeof(name) !== "string")
-    {
+  FindChild(name, directory_ctor = Directory, file_ctor = File) {
+    if (typeof (name) !== "string") {
       throw new Error(`Directory.FindChild expected parameter name to be a string, but got "${name}"`);
     }
 
     const children = this.GetChildren();
 
     const lower = name.toLowerCase();
-    if (children.has(lower))
-    {
+    if (children.has(lower)) {
       return children.get(lower);
     }
 
@@ -84,16 +69,14 @@ export class Directory extends Entry
     const url = new URL(this.href + "/" + name);
     const stats = FS.statSync(url, { throwIfNoEntry: false });
 
-    if (stats)
-    {
+    if (stats) {
       if (stats.isDirectory()) child = new directory_ctor(url, this);
       else if (stats.isFile()) child = new file_ctor(url, this);
       else throw new Error(`Unknown entry at "${url}", expected a file or directory`);
 
       child.SetStats(stats);
     }
-    else
-    {
+    else {
       child = new Placeholder(url, this);
     }
 
@@ -105,22 +88,19 @@ export class Directory extends Entry
     return child;
   }
 
-  GetChild(name)
-  {
+  GetChild(name) {
     const child = this.FindChild(name);
 
     if (child) return child;
     else throw new Error(`Invalid child at "${this.href + "/" + name}", must be a file or directory`);
   }
 
-  RemoveChild(child)
-  {
+  RemoveChild(child) {
     const children = this.GetChildren();
     const name = child.GetName();
     const lower = name.toLowerCase();
 
-    if (children.has(lower))
-    {
+    if (children.has(lower)) {
       children.delete(name);
       // child.destructor();
       return;
@@ -129,8 +109,7 @@ export class Directory extends Entry
     throw new Error(`Failed to remove child "${child.GetNormalized()}" from parent "${this.GetNormalized()}"`);
   }
 
-  ReplaceChild(child, replacement)
-  {
+  ReplaceChild(child, replacement) {
     this.RemoveChild(child);
 
     const name = replacement.GetName();
@@ -140,38 +119,31 @@ export class Directory extends Entry
     children.set(lower, replacement);
   }
 
-  Query(query, domains, state, index)
-  {
+  Query(query, domains, state, index) {
     const parts = query.GetParts();
-    if (index >= parts.length)
-    {
+    if (index >= parts.length) {
       return super.Query(query, domains, state, index);
     }
 
-    if (!parts[index])
-    {
+    if (!parts[index]) {
       return;
     }
 
     const child = this.FindChild(parts[index]);
-    if (child)
-    {
+    if (child) {
       index += 1;
       return child.Query(query, domains, state, index);
     }
   }
 
-  QuerySync(query, domains, state, index)
-  {
+  QuerySync(query, domains, state, index) {
     return this.Query(query, domains, state, index);
   }
 
-  async _CreateSource(specifier, loader, domains)
-  {
+  async _CreateSource(specifier, loader, domains) {
     if (this.pathname.includes(".ignore")) return;
 
-    if (!(specifier instanceof URL))
-    {
+    if (!(specifier instanceof URL)) {
       specifier = new URL(specifier, this);
     }
 
@@ -190,14 +162,12 @@ export class Directory extends Entry
     specifier.searchParams.delete("next");
 
     let recursive = true;
-    if (specifier.searchParams.has("recursive") && specifier.searchParams.get("recursive") === "false")
-    {
+    if (specifier.searchParams.has("recursive") && specifier.searchParams.get("recursive") === "false") {
       recursive = false;
     }
 
     const entries = await this.GetEntries();
-    for (let i = 0; i < entries.length; i++)
-    {
+    for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       if (entry.pathname.includes(".ignore")) continue;
 
@@ -206,8 +176,7 @@ export class Directory extends Entry
 
       const file = await loader.Search(this, import_url, domains);
 
-      if (recursive !== true && file instanceof Directory)
-      {
+      if (recursive !== true && file instanceof Directory) {
         // console.log("Not importing", import_url);
         continue;
       }
@@ -218,16 +187,12 @@ export class Directory extends Entry
     return Buffer.from(lines.join("\n"), "utf8");
   }
 
-  _GetSource(specifier, loader, domains)
-  {
-    return this[SOURCE] ??= new Promise(async (resolve, reject) =>
-    {
-      try
-      {
+  _GetSource(specifier, loader, domains) {
+    return this[SOURCE] ??= new Promise(async (resolve, reject) => {
+      try {
         if (this.pathname.includes(".ignore")) return;
 
-        if (!(specifier instanceof URL))
-        {
+        if (!(specifier instanceof URL)) {
           specifier = new URL(specifier, this);
         }
 
@@ -246,14 +211,12 @@ export class Directory extends Entry
         specifier.searchParams.delete("next");
 
         let recursive = true;
-        if (specifier.searchParams.has("recursive") && specifier.searchParams.get("recursive") === "false")
-        {
+        if (specifier.searchParams.has("recursive") && specifier.searchParams.get("recursive") === "false") {
           recursive = false;
         }
 
         const entries = await this.GetEntries();
-        for (let i = 0; i < entries.length; i++)
-        {
+        for (let i = 0; i < entries.length; i++) {
           const entry = entries[i];
           if (entry.pathname.includes(".ignore")) continue;
 
@@ -262,8 +225,7 @@ export class Directory extends Entry
 
           const file = await loader.Search(this, import_url, domains);
 
-          if (recursive !== true && file instanceof Directory)
-          {
+          if (recursive !== true && file instanceof Directory) {
             // console.log("Not importing", import_url);
             continue;
           }
@@ -274,23 +236,18 @@ export class Directory extends Entry
         const source = Buffer.from(lines.join("\n"), "utf8");
         resolve(source);
       }
-      catch (error)
-      {
+      catch (error) {
         reject(error);
       }
     });
   }
 
-  _GetCustomSource(specifier, loader, domains)
-  {
-    return this[SOURCE] ??= new Promise(async (resolve, reject) =>
-    {
-      try
-      {
+  _GetCustomSource(specifier, loader, domains) {
+    return this[SOURCE] ??= new Promise(async (resolve, reject) => {
+      try {
         if (this.pathname.includes(".ignore")) return;
 
-        if (!(specifier instanceof URL))
-        {
+        if (!(specifier instanceof URL)) {
           specifier = new URL(specifier, this);
         }
 
@@ -309,14 +266,12 @@ export class Directory extends Entry
         specifier.searchParams.delete("next");
 
         let recursive = true;
-        if (specifier.searchParams.has("recursive") && specifier.searchParams.get("recursive") === "false")
-        {
+        if (specifier.searchParams.has("recursive") && specifier.searchParams.get("recursive") === "false") {
           recursive = false;
         }
 
         const entries = await this.GetEntries();
-        for (let i = 0; i < entries.length; i++)
-        {
+        for (let i = 0; i < entries.length; i++) {
           const entry = entries[i];
           if (entry.pathname.includes(".ignore")) continue;
 
@@ -325,20 +280,17 @@ export class Directory extends Entry
           const import_url = `/js/${end}${query ? "?" + query : ""}`;
 
           const file = await loader.Search(this, import_url, domains);
-          if (file === this)
-          {
+          if (file === this) {
             // console.log("Matched self");
             continue;
           }
 
-          if (recursive !== true && file instanceof Directory)
-          {
+          if (recursive !== true && file instanceof Directory) {
             // console.log("Not importing", import_url);
             continue;
           }
 
-          if (file)
-          {
+          if (file) {
             // lines.push(`console.log("Exporting file ${import_url}");`);
             lines.push(`export * from "${import_url}";`);
           }
@@ -348,17 +300,15 @@ export class Directory extends Entry
         const source = Buffer.from(lines.join("\n"), "utf8");
         resolve(source);
       }
-      catch (error)
-      {
+      catch (error) {
         reject(error);
       }
     });
   }
 
-  IsDirectory(){ return true; }
+  IsDirectory() { return true; }
 
-  async Refresh()
-  {
+  async Refresh() {
     // console.log("Refreshing Directory", this.GetNormalized());
 
     this.Assert();
@@ -367,8 +317,7 @@ export class Directory extends Entry
     const stats = await FSP.stat(this).catch(() => undefined);
 
     // It was removed
-    if (!stats) 
-    {
+    if (!stats) {
       const replacement = new Placeholder(this, parent);
       parent.ReplaceChild(this, replacement);
       this.destructor();
@@ -376,11 +325,10 @@ export class Directory extends Entry
       return replacement;
     }
 
-    if (stats.isFile())
-    {
+    if (stats.isFile()) {
       const replacement = new File(this, parent);
       replacement.SetStats(stats);
-      
+
       // Was changed into a file
       parent.ReplaceChild(this, replacement);
 
@@ -388,15 +336,12 @@ export class Directory extends Entry
 
       return replacement;
     }
-    else
-    {
+    else {
       const old_stats = this.GetStats();
       this.SetStats(stats);
 
-      if (old_stats && stats.mtime > old_stats.mtime)
-      {
-        for (const [name, child] of this.GetChildren())
-        {
+      if (old_stats && stats.mtime > old_stats.mtime) {
+        for (const [name, child] of this.GetChildren()) {
           await child.Refresh();
         }
       }
@@ -405,8 +350,7 @@ export class Directory extends Entry
     }
   }
 
-  RefreshSync()
-  {
+  RefreshSync() {
     // console.log("Refreshing Directory", this.GetNormalized());
 
     this.Assert();
@@ -415,8 +359,7 @@ export class Directory extends Entry
     const stats = FS.statSync(this, { throwIfNoEntry: false });
 
     // It was removed
-    if (!stats) 
-    {
+    if (!stats) {
       const replacement = new Placeholder(this, parent);
       parent.ReplaceChild(this, replacement);
       this.destructor();
@@ -424,11 +367,10 @@ export class Directory extends Entry
       return replacement;
     }
 
-    if (stats.isFile())
-    {
+    if (stats.isFile()) {
       const replacement = new File(this, parent);
       replacement.SetStats(stats);
-      
+
       // Was changed into a file
       parent.ReplaceChild(this, replacement);
 
@@ -436,15 +378,12 @@ export class Directory extends Entry
 
       return replacement;
     }
-    else
-    {
+    else {
       const old_stats = this.GetStats();
       this.SetStats(stats);
 
-      if (old_stats && stats.mtime > old_stats.mtime)
-      {
-        for (const [name, child] of this.GetChildren())
-        {
+      if (old_stats && stats.mtime > old_stats.mtime) {
+        for (const [name, child] of this.GetChildren()) {
           child.RefreshSync();
         }
       }
