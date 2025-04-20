@@ -3,5 +3,8 @@
 // import "/flag#dangerous";
 // import "/flag#domain";
 import "/flag#static;frozen;dangerous;domain";
+import { workerData } from "node:worker_threads";
 
-export const Data = {};
+console.log(workerData);
+
+export const Data = workerData;
