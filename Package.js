@@ -91,7 +91,7 @@ export class Package
     this.layers ??= [];
     this.window_url ??= "https://localhost:3000/";
     this.start ??= "/js/Start.js";
-    this.flags ??= ["--experimental-loader"];
+    this.flags ??= [];
 
     // Make each layer path into an absolute file URL
     for (let i = 0; i < this.layers.length; i++)
