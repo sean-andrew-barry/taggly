@@ -241,7 +241,7 @@ export class Loader {
   }
 
   Initialize(data) {
-    // console.log("CONSTRUCTING LOADER");
+    console.log("CONSTRUCTING LOADER");
     const old_loader = data.loader;
     data.loader = this;
 
@@ -313,6 +313,8 @@ export class Loader {
       }
     }
 
+    console.log("LAYERS:", this.#layers, data.layers);
+
     // this.Destructor(SELF_URL, () =>
     // {
     //   console.log("~~~~~~Destructing loader~~~~~~~~");
@@ -371,6 +373,8 @@ export class Loader {
 
       this.#loader = this.Query(SELF_URL);
       this.#start = this.Query("/js/Start.js");
+
+      console.log("Starting");
 
       await this.Import("/js/Start.js")
         .then(async mod => {
@@ -906,6 +910,8 @@ export class Loader {
   }
 
   OnResolveSync(specifier, context, default_resolver) {
+    // console.log("Resolving", specifier, context.parentURL);
+
     if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import")) {
       console.warn("Unexpected import conditions", context.conditions, "on import", specifier);
     }
@@ -1172,6 +1178,11 @@ export class Loader {
     // console.error(error);
   }
 
+  OnLoadErrorSync(error, url, context) {
+    console.log("~~LOAD ERROR SYNC~~");
+    console.error(error);
+  }
+
   GetEscape(code) {
     switch (code) {
       case 0: return "\\x00";
@@ -1412,6 +1423,118 @@ export class Loader {
         const data = await this.GetEntryData(entry);
 
         // console.log(entry.GetNormalized());
+
+        if (data) {
+          this.#lines += entry.GetLines();
+          this.#loaded.add(entry);
+
+          // if (entry.GetNormalized() === "taggly/private/js/Stop.js")
+          // {
+          //   // await import("/js/Main.js");
+          //   // await this.#loading;
+          //   // const string = data.toString();
+          //   console.log("Loading start...", this.#start.GetImports());
+          // }
+
+          // if (Math.random() > 0.95)
+          // {
+          //   console.log("Sleeping...", entry.GetNormalized());
+          //   await this.Sleep(1000);
+          // }
+
+          return {
+            format: "module",
+            responseURL: url,
+            shortCircuit: true,
+            source: data,
+          };
+        }
+      }
+    }
+
+    // console.log("Default loading", url);
+    return default_load(url, context, default_load);
+  }
+
+  OnLoadSync(url, context, default_load) {
+    if (context.format === "module" && url.startsWith("file:/")) {
+      const query = new Query(url);
+      const entry = this.Query(query);
+      entry?.Assert();
+
+      this.#last_entry_loaded = entry;
+
+      if (entry) {
+        entry.Load();
+
+        this.#unresolved.add(url);
+
+        // console.log("Importing", entry.GetNormalized(), entry.GetImports().size, context);
+
+        if (query.HasFlag()) {
+          const flag = query.GetFlag();
+          const resolved = entry.Resolve(entry);
+          const href = resolved.href;
+          // const href = new URL(url).searchParams.get("url");
+          // console.log("Resolved!", href);
+
+          if (entry.IsVolatile()) {
+            return {
+              format: "module",
+              responseURL: url,
+              shortCircuit: true,
+              source: "",
+            };
+          }
+
+          return {
+            format: "module",
+            responseURL: url,
+            shortCircuit: true,
+            source: [
+              // `export * from "${href}";`,
+              // // `export {default} from "${href}";`,
+              // // `export * as mod from "${url}";`,
+              `import * as mod from "${href}";`,
+              // // `import "${href}";`,
+              // `console.log("Resolved ${entry.GetNormalized()}", mod);`,
+              // `import {Registry} from "/js/Loader/Registry.js";`,
+              // "",
+              // `Registry.Add("${href}", mod);`,
+            ].join("\n"),
+          };
+        }
+
+        if (this.IsWrapping() && query.HasWrapper()) {
+          const resolved = entry.Resolve(entry);
+          const href = resolved.href;
+
+          console.log("Wrapping", entry.GetNormalized());
+
+          return {
+            format: "module",
+            responseURL: url,
+            shortCircuit: true,
+            source: [
+              `export * from "${href}";`,
+              // `export {default} from "${href}";`,
+              // `export * as mod from "${url}";`,
+              `import * as mod from "${href}";`,
+              `import {Registry} from "/js/Loader/Registry.js";`,
+              "",
+              `if (Object.hasOwn(mod, "default")) throw new Error("File ${entry.GetNormalized()} has a default export, which is incompatible with using automatic export registration.");`,
+              "",
+              `Registry.Add("${href}", mod);`,
+            ].join("\n"),
+          };
+        }
+
+        this.#files += 1;
+
+        entry.Starting(url);
+        const data = entry.GetDataSync();
+
+        console.log("DATA:", entry.GetNormalized());
 
         if (data) {
           this.#lines += entry.GetLines();
