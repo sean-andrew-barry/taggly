@@ -1141,6 +1141,32 @@ export class Loader {
     return this.ResolveNull();
   }
 
+  OnResolveErrorSync(error) {
+    const string = this.FormatError(error, "Resolve Error");
+    console.error(string);
+
+    // import("/js/Error.js")
+    // .then(mod =>
+    // {
+    //   if (!(error instanceof mod.Error))
+    //   {
+    //     error = new mod.Error("Loader start error", {cause: error});
+    //   }
+
+    //   console.error(error);
+    //   console.error(error.toString());
+    // })
+    // .catch(e =>
+    // {
+    //   console.log("~~RESOLVE ERROR~~", e);
+
+    //   // Just print the original error the regular way
+    //   console.error(error);
+    // });
+
+    return this.ResolveNull();
+  }
+
   OnLoadError(error, url, context) {
     console.log("~~LOAD ERROR~~");
     // console.error(error);
