@@ -996,6 +996,157 @@ export class Loader
     return await default_resolver(specifier, context, default_resolver);
   }
 
+  OnResolveSync(specifier, context, default_resolver)
+  {
+    if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import"))
+    {
+      console.warn("Unexpected import conditions", context.conditions, "on import", specifier);
+    }
+
+    if (specifier === "@self")
+    {
+      return {
+        shortCircuit: true,
+        format: "module",
+        url: context.parentURL,
+      };
+    }
+    else if (specifier === "@register")
+    {
+      return {
+        shortCircuit: true,
+        format: "module",
+        url: REGISTER_URL,
+      };
+    }
+
+    this.#requests += 1;
+
+    if (this.data.resolve_skips.has(specifier))
+    {
+      const resolved = default_resolver(specifier, context, default_resolver);
+      
+      // If we are in Contextify mode and it's a commonjs module
+      if (this.IsContextifying() && resolved.format === "commonjs")
+      {
+        // console.log(specifier);
+
+        // Then grab the importer File and resolve to it with the appropriate query parameters
+        const resolver = this.Query("/js/Loader/NodeModules/Resolve.js");
+
+        const url = new URL(resolver);
+        url.searchParams.set("source", resolved.url);
+        url.searchParams.set("name", specifier); // Like "mongodb"
+
+        return {
+          format: "module",
+          url: url.href,
+          shortCircuit: true,
+        };
+      }
+
+      return resolved;
+    }
+
+    const parent_url = context.parentURL;
+    const parent_query = new Query(parent_url);
+    const query = new Query(specifier);
+
+    const prev_parent_url = this.#prev_parent_url;
+    this.#prev_parent_url = parent_url;
+
+    const is_resolved = !this.#unresolved.has(parent_url);
+    if (prev_parent_url && parent_url !== prev_parent_url && this.#unresolved.has(prev_parent_url))
+    {
+      this.#unresolved.delete(prev_parent_url);
+    }
+
+    let parent;
+    let entry;
+    if (typeof(parent_url) === "string")
+    {
+      parent = this.Query(parent_query);
+
+      if (!parent)
+      {
+        parent = this.#parent_map.get(parent_url);
+      }
+
+      if (!parent && !parent_url.endsWith("/taggly/Start.js"))
+      {
+        // The reason for this is that the parent can be used to check if
+        // a certain import is allowed.
+        // If there isn't a parent, we can't do that.
+        // Also, AFAIK there is always a parent, so if there isn't,
+        // something weird is happening
+        throw new Error(`The file "${parent_url}" cannot import "${specifier}" because it is not in the layer hierarchy. For security, layer files can only be imported by other layer files.`);
+      }
+
+      this.#last_entry_resolved = parent;
+    }
+
+    if (specifier.startsWith("/flag#"))
+    {
+      if (!this.CountFlagRequests())
+      {
+        this.#requests -= 1;
+      }
+
+      const anchor = query.GetAnchor();
+      if (anchor)
+      {
+        parent.Flag(anchor);
+
+        if (anchor === "resolved")
+        {
+          // // console.log("Resolved", parent.GetNormalized());
+          return this.ResolveResolved(parent);
+        }
+      }
+
+      return this.ResolveNull();
+    }
+
+    // Absolute path, or node/browser style relative path
+    if (specifier.startsWith("/") || specifier.startsWith(".") || specifier.startsWith("file:///"))
+    {
+      entry = this.Query(query, undefined, { parent });
+
+      if (!entry)
+      {
+        throw new Error(`Failed to import a file or directory for specifier "${specifier}" from "${parent?.GetNormalized() ?? "UNKNOWN PARENT"}"`);
+      }
+
+      if (entry.IsIncremented())
+      {
+        entry.ReloadSync();
+      }
+
+      if (is_resolved)
+      {
+        // console.log(parent.GetNormalized(), "is resolved, so", specifier, "must be dynamic?");
+      }
+
+      entry.ValidateImportFrom(parent);
+
+      if (parent && (parent !== this.#loader) && !query.HasIgnore())
+      {
+        entry.AddReference(parent);
+        parent.AddImport(entry);
+      }
+
+      const url = entry.Resolve(parent);
+
+      return {
+        shortCircuit: true,
+        format: "module",
+        url: url.toString(),
+      };
+    }
+
+    return default_resolver(specifier, context, default_resolver);
+  }
+
   Import(specifier)
   {
     return import(specifier);
