@@ -898,13 +898,10 @@ export class Program extends Keyboard
 
     pkg.SetCWD(path);
     pkg.SetFrameworkCWD(__dirname);
-    // pkg.SetMainPath(join(__dirname, `./private/js/Start.js`));
-    // pkg.SetMainPath("./private/js/Loader.js");
     pkg.SetMainPath(join(__dirname, `./Start.js`));
-    // pkg.SetMainPath(join(__dirname, `./private/js/Sandbox.js`));
-    pkg.SetAppURL(app_url);
-    pkg.SetAppParentURL(app_parent_url);
-    pkg.SetFrameworkURL(framework_url);
+    pkg.SetAppURL(app_url.href);
+    pkg.SetAppParentURL(app_parent_url.href);
+    pkg.SetFrameworkURL(framework_url.href);
     pkg.SetStartURL("/js/Loader.js");
     // pkg.SetStartURL(pathToFileURL(join(__dirname, `./private/js/Start.js`)));
     pkg.SetPackagePath(pkg_path);
@@ -912,21 +909,23 @@ export class Program extends Keyboard
     pkg.SetLoaderPath(pathToFileURL(join(__dirname, "./Preloader.js")).href);
     pkg.SetWindowURL("https://localhost:3000/");
     pkg.SetClusterSize(1);
+    pkg.preloads = new Map();
+    pkg.instance = 0;
 
-    // pkg.buffer_bytes ??= 1024 * 1024;
-    // pkg.max_buffer_bytes ??= pkg.buffer_bytes * 10;
+    pkg.buffer_bytes ??= 1024 * 1024;
+    pkg.max_buffer_bytes ??= pkg.buffer_bytes * 64;
 
-    // if (!this.buffer)
-    // {
-    //   this.buffer = new SharedArrayBuffer(pkg.buffer_bytes, { maxByteLength: pkg.max_buffer_bytes });
-    //   const view = new DataView(this.buffer, 0);
-    //   // view.setUint32(0, 0); // 
-    //   view.setInt32(4, this.buffer.byteLength - 4, true);
-    //   // console.log("Writing length", this.buffer.byteLength - 4, view.getInt32(4));
-    // }
+    if (!this.buffer)
+    {
+      this.buffer = new SharedArrayBuffer(pkg.buffer_bytes, { maxByteLength: pkg.max_buffer_bytes });
+      const view = new DataView(this.buffer, 0);
+      // view.setUint32(0, 0); // 
+      view.setInt32(4, this.buffer.byteLength - 4, true);
+      // console.log("Writing length", this.buffer.byteLength - 4, view.getInt32(4));
+    }
 
     // this.buffer ??= new SharedArrayBuffer(pkg.buffer_bytes);
-    // pkg.buffer = this.buffer;
+    pkg.buffer = this.buffer;
 
     // pkg.AddFlag("--trace-warnings");
     // pkg.AddFlag("--experimental-vm-modules");
