@@ -160,6 +160,11 @@ export class Directory extends Entry
     }
   }
 
+  QuerySync(query, domains, state, index)
+  {
+    return this.Query(query, domains, state, index);
+  }
+
   async _CreateSource(specifier, loader, domains)
   {
     if (this.pathname.includes(".ignore")) return;
@@ -392,6 +397,54 @@ export class Directory extends Entry
         for (const [name, child] of this.GetChildren())
         {
           await child.Refresh();
+        }
+      }
+
+      return this;
+    }
+  }
+
+  RefreshSync()
+  {
+    // console.log("Refreshing Directory", this.GetNormalized());
+
+    this.Assert();
+
+    const parent = this.GetParent();
+    const stats = FS.statSync(this, { throwIfNoEntry: false });
+
+    // It was removed
+    if (!stats) 
+    {
+      const replacement = new Placeholder(this, parent);
+      parent.ReplaceChild(this, replacement);
+      this.destructor();
+
+      return replacement;
+    }
+
+    if (stats.isFile())
+    {
+      const replacement = new File(this, parent);
+      replacement.SetStats(stats);
+      
+      // Was changed into a file
+      parent.ReplaceChild(this, replacement);
+
+      this.destructor();
+
+      return replacement;
+    }
+    else
+    {
+      const old_stats = this.GetStats();
+      this.SetStats(stats);
+
+      if (old_stats && stats.mtime > old_stats.mtime)
+      {
+        for (const [name, child] of this.GetChildren())
+        {
+          child.RefreshSync();
         }
       }
 

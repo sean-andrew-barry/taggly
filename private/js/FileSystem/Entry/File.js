@@ -148,29 +148,25 @@ export class File extends Entry
   #data;
   CreateData()
   {
-    return new Promise((resolve, reject) =>
-    {
-      const stream = FS.createReadStream(this);
+    // fall back to fast path if another caller already loaded sync
+    if (this.#data) return this.#data;
 
-      const chunks = [];
-      stream.on("data", data => chunks.push(data));
-
-      stream.on("end", () =>
-      {
-        const buffer = this.ConcatDataChunks(chunks);
-
-        this.#bytes = buffer.byteLength;
-        this.#lines = this.CountBufferLines(buffer);
-
-        return resolve(buffer);
-      });
-
-      stream.on("error", error => reject(error));
-    });
+    const buffer = await FSP.readFile(this);
+    this.#bytes = buffer.byteLength;
+    this.#lines = this.CountBufferLines(buffer);
+    return buffer;
   }
 
-  HasData(){ this.Assert(); return this.#data !== undefined; }
-  GetData(){ this.Assert(); return this.#data ??= this.CreateData(); }
+  CreateDataSync() {
+    const buffer = FS.readFileSync(this);
+    this.#bytes = buffer.byteLength;
+    this.#lines = this.CountBufferLines(buffer);
+    return buffer;
+  }
+
+  HasData() { this.Assert(); return this.#data !== undefined; }
+  GetData() { this.Assert(); return this.#data ??= this.CreateData(); }
+  GetDataSync() { this.Assert(); return this.#data ??= this.CreateDataSync(); }
 
   #etag;
   async CreateETag()
@@ -178,12 +174,20 @@ export class File extends Entry
     const data = await this.GetData();
     const hash = Cyrb.Hash53(data);
 
-    // return `"${hash.toString(16)}"`;
+    return hash.toString(16);
+  }
+
+  async CreateETagSync()
+  {
+    const data = this.GetDataSync();
+    const hash = Cyrb.Hash53(data);
+
     return hash.toString(16);
   }
 
   HasETag() { this.Assert(); return this.#etag !== undefined; }
   GetETag() { this.Assert(); return this.#etag ??= this.CreateETag(); }
+  GetETagSync() { this.Assert(); return this.#etag ??= this.CreateETagSync(); }
 
   CreateGZip()
   {
@@ -403,6 +407,83 @@ export class File extends Entry
         this.#etag = undefined;
         
         const new_etag = await this.GetETag();
+
+        // console.log(old_etag, new_etag);
+    
+        if (new_etag === old_etag)
+        {
+          return this; // No need to continue with the update
+        }
+    
+        this.#gzip = undefined;
+        this.#deflate = undefined;
+        this.#module_cached_data = undefined;
+    
+        const checked = new WeakSet();
+        this.Increment(checked);
+        this.Rereference(checked);
+
+        // console.log("File updated", this.GetNormalized(), old_etag, new_etag);
+      }
+
+      // Still a file, so no change
+      return this;
+    }
+    else if (stats.isDirectory())
+    {
+      const replacement = new Directory(this, parent);
+      replacement.SetStats(stats);
+
+      // Was changed into a directory
+      parent.ReplaceChild(this, replacement);
+
+      this.destructor();
+      return replacement;
+    }
+    else
+    {
+      return this;
+    }
+  }
+
+  RefreshSync()
+  {
+    // console.log("Refreshing File", this.GetNormalized());
+
+    this.Assert();
+
+    const parent = this.GetParent();
+    const stats = FS.statSync(this, { throwIfNoEntry: false });
+
+    if (!stats)
+    {
+      // console.log("File was removed, swapping for a placeholder");
+
+      // Was removed
+      const placeholder = new Placeholder(this, parent);
+      parent.ReplaceChild(this, placeholder);
+      this.destructor();
+
+      return placeholder;
+    }
+
+    if (stats.isFile())
+    {
+      // console.log("File is still a file...");
+
+      const old_stats = this.GetStats();
+      this.SetStats(stats);
+
+      if (old_stats && stats.mtime > old_stats.mtime)
+      {
+        if (this.IsFrozen()) return this;
+
+        const old_etag = this.GetETagSync();
+        
+        this.#data = undefined;
+        this.#etag = undefined;
+        
+        const new_etag = this.GetETagSync();
 
         // console.log(old_etag, new_etag);
     

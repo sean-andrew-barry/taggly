@@ -444,6 +444,64 @@ export class Entry extends globalThis.URL
     }
   }
 
+  ReloadSync()
+  {
+    // Save the new instance it will be imported at
+    this.SetImported(this.GetInstance());
+
+    // console.log("Reloading", this.GetNormalized());
+
+    this.#promise = undefined;
+
+    if (this.HasImports())
+    {
+      const imports = this.GetImports();
+
+      if (imports.size > 0)
+      {
+        // This entry is about to get imported, so remove it as a reference
+        // From each entry it had previously imported
+        // This is because it may have stopped importing an entry it did previously
+        for (const entry of imports)
+        {
+          if (entry.HasReferences())
+          {
+            const refs = entry.GetReferences();
+            if (refs.has(this))
+            {
+              refs.delete(this);
+              continue;
+            }
+          }
+
+          throw new Error(`Entry "${this.GetNormalized()}" imports "${entry.GetNormalized()}", but it isn't set as a reference`);
+        }
+
+        // Completely clear the imports, because they will be rebuilt when the entry
+        // gets imported again
+        imports.clear();
+      }
+    }
+
+    // Reset the flags, because they will be set again after the import
+    this.#flags.Clear();
+    this.#resolved = false;
+
+    while (this.#destructors && this.#destructors.length > 0)
+    {
+      const destructor = this.#destructors.pop();
+
+      try
+      {
+        destructor();
+      }
+      catch (error)
+      {
+        console.error(`Error while running destructor for "${this.GetNormalized()}"`, error);
+      }
+    }
+  }
+
   Increment()
   {
     if (this.IsFrozen()) return;
@@ -569,6 +627,11 @@ export class Entry extends globalThis.URL
     return this;
   }
 
+  RefreshSync()
+  {
+    return this;
+  }
+
   Query(query, domains, state, index)
   {
     const {prev, parent} = state;
@@ -621,6 +684,11 @@ export class Entry extends globalThis.URL
     }
 
     return this.Test(query, prev, parent);
+  }
+
+  QuerySync(query, domains, state, index)
+  {
+    return this.Query(query, domains, state, index);
   }
 
   Test(query, prev, parent)
