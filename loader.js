@@ -8,6 +8,7 @@ import node_path from "path";
 import https from "https";
 import {webcrypto as crypto} from "crypto";
 import {URL, pathToFileURL, fileURLToPath} from "url";
+import {parentPort} from "node:worker_threads";
 import {performance} from "perf_hooks";
 import {Package} from "./Package.js";
 import {Entry} from "./LoaderUtilities/Entry.js";
@@ -356,7 +357,6 @@ export class Loader extends Layer
 
   CreateLayer(href, index)
   {
-    // console.log("Creating layer", index, href);
     const layer = new Layer(href);
 
     layer.SetParent(this);
@@ -659,9 +659,8 @@ export class Loader extends Layer
   Send(action, ...args)
   {
     const json = JSON.stringify([action, args], undefined, 2);
-    console.log(json);
     
-    global.process.send(json);
+    parentPort.postMessage(json);
     return this;
   }
 
@@ -1147,6 +1146,8 @@ export class Loader extends Layer
 
   async Resolve(specifier, context, default_resolver)
   {
+    console.log("Resolving", specifier, context, default_resolver);
+    
     if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import"))
     {
       console.warn("Unexpected import conditions", context.conditions, "on import", specifier);
@@ -1164,6 +1165,7 @@ export class Loader extends Layer
       return {
         format: "module",
         url: this.redirects.get(specifier).href,
+        shortCircuit: true,
       };
     }
 
@@ -1203,7 +1205,7 @@ export class Loader extends Layer
         // If there isn't a parent, we can't do that.
         // Also, AFAIK there is always a parent, so if there isn't,
         // something weird is happening
-        throw new Error(`Parent "${parent_url}" cannot import "${specifier}" because it is not in the layer heirarchy. For security, layer files can only be imported by other layer files.`);
+        throw new Error(`Parent "${parent_url}" cannot import "${specifier}" because it is not in the layer hierarchy. For security, layer files can only be imported by other layer files.`);
       }
 
       if (specifier === "loader:static" || specifier === "/loader.static")
@@ -1214,6 +1216,7 @@ export class Loader extends Layer
         return {
           format: "module",
           url: NULL_URL,
+          shortCircuit: true,
         };
       }
       // Absolute path, or node/browser style relative path
@@ -1233,6 +1236,7 @@ export class Loader extends Layer
         this.parents.set(specifier, parent);
         return {
           url: specifier,
+          shortCircuit: true,
         };
       }
     }
@@ -1354,6 +1358,229 @@ export class Loader extends Layer
       return {
         format: "module",
         url: specifier,
+        shortCircuit: true,
+      };
+    }
+
+    return default_resolver(specifier, context, default_resolver);
+  }
+
+  ResolveSync(specifier, context, default_resolver)
+  {
+    console.log("Resolving", specifier, context, default_resolver);
+    
+    if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import"))
+    {
+      console.warn("Unexpected import conditions", context.conditions, "on import", specifier);
+    }
+
+    if (RESOLVE_SKIPS.has(specifier))
+    {
+      return default_resolver(specifier, context, default_resolver);
+    }
+
+    if (this.redirects.has(specifier))
+    {
+      console.log("Redirecting", specifier, "to", this.redirects.get(specifier));
+
+      return {
+        format: "module",
+        url: this.redirects.get(specifier).href,
+        shortCircuit: true,
+      };
+    }
+
+    const original = specifier;
+    const parent_url = context.parentURL;
+    const parent_query = new Query(parent_url);
+    const query = new Query(specifier);
+
+    let parent;
+    let entry;
+    if ((typeof(parent_url) === "string"))
+    {
+      // If a file was imported from this file, bypass the parent search for performance
+      if (parent_url === SELF_URL.href)
+      {
+        parent = this.root;
+      }
+      else if (parent_url.startsWith("https://"))
+      {
+        // This is essentially getting the parent of the parent file
+        // In other words, the layer file that began the remote import process
+        parent = this.parents.get(parent_url);
+      }
+      else if (this.parents.has(parent_url))
+      {
+        parent = this.parents.get(parent_url);
+      }
+      else
+      {
+        parent = this.QuerySync(parent_query, this.GetDomains());
+      }
+
+      if (!parent)
+      {
+        // The reason for this is that the parent can be used to check if
+        // a certain import is allowed.
+        // If there isn't a parent, we can't do that.
+        // Also, AFAIK there is always a parent, so if there isn't,
+        // something weird is happening
+        throw new Error(`Parent "${parent_url}" cannot import "${specifier}" because it is not in the layer hierarchy. For security, layer files can only be imported by other layer files.`);
+      }
+
+      if (specifier === "loader:static" || specifier === "/loader.static")
+      {
+        parent.SetStatic(true);
+        this.static_entries.set(parent, parent_url);
+
+        return {
+          format: "module",
+          url: NULL_URL,
+          shortCircuit: true,
+        };
+      }
+      // Absolute path, or node/browser style relative path
+      else if (specifier.startsWith("/") || specifier.startsWith(".") || specifier.startsWith("file:///"))
+      {
+        const domains = parent.GetDomains() ?? this.GetDomains();
+        entry = this.QuerySync(query, domains);
+
+        if (!entry)
+        {
+          throw new Error(`Failed to import a file or directory for specifier "${specifier}" from "${parent?.href ?? "UNKNOWN PARENT"}"`);
+        }
+      }
+      else if (specifier.startsWith("https://"))
+      {
+        console.log("Got HTTPs request", specifier);
+        this.parents.set(specifier, parent);
+
+        return {
+          url: specifier,
+          shortCircuit: true,
+        };
+      }
+    }
+    else
+    {
+      // This is necessary because of how the nodejs process encodes the query string in the command line
+      const start_url = new URL(decodeURIComponent(this.GetPackage().start_url));
+
+      this.root = this.QuerySync(start_url.href, this.GetDomains());
+      if (!this.root) throw new Error(`Failed to find a root from start_url "${start_url}"`);
+
+      entry = this.root;
+
+      this.root.SetVersion(this.version);
+      // this.root.searchParams.set("version", this.version);
+
+      if (typeof(this.instance) === "number")
+      {
+        this.root.SetInstance(this.instance);
+        // this.root.searchParams.set("instance", this.instance);
+      }
+
+      if (this.development === true)
+      {
+        this.root.SetDevelopment(this.development);
+        // this.root.searchParams.set("development", true);
+      }
+
+      this.instance -= 1;
+
+      // QUESTION: Should this await? I think so, because otherwise errors might not be handled, right?
+      this.Reload(true, false);
+    }
+
+    if (entry)
+    {
+      entry.SetSpecifier(query);
+
+      const old_specifier = this.specifiers.get(entry);
+      const parameters = query.GetParameters();
+      const search = query.GetSearch();
+      // const sandbox = parameters?.get("sandbox");
+
+      if (this.static_entries.has(entry))
+      {
+        // specifier = this.static_entries.get(entry) ?? entry.href;
+        specifier = entry.HRef(parameters, parent_query.GetParameters());
+      }
+      else if (parameters?.has("static"))
+      {
+        entry.SetStatic(true);
+        specifier = entry.HRef(parameters, parent_query.GetParameters());
+        // specifier = entry.href;
+
+        this.static_entries.set(entry, specifier);
+      }
+      // else if (parameters?.has("sandbox"))
+      // {
+      //   specifier = entry.HRef(parameters, parent_query.GetParameters());
+      //   // specifier = entry.href;
+      //
+      //   this.static_entries.set(entry, specifier);
+      // }
+      else
+      {
+        // specifier = entry.href + this.root.search;
+        // entry.UpdateFrom(parent);
+        specifier = entry.HRef(parameters, parent_query.GetParameters());
+        // console.log("Default import", specifier);
+      }
+
+      // if (parameters?.has("sandbox") || parent_query.GetParameters()?.has("sandbox"))
+      // {
+      //   console.log("Assigning sandbox", parameters.get("sandbox"), "to", entry.href);
+      //   // entry.SetSandbox(parameters.get("sandbox"));
+      // }
+
+      if (old_specifier === undefined)
+      {
+        this.files += 1;
+        // console.log("No old_specifier for", entry.href);
+      }
+      else if (old_specifier && old_specifier !== specifier)
+      {
+        this.files += 1;
+
+        if (this.destructors.has(old_specifier))
+        {
+          const callbacks = this.destructors.get(old_specifier);
+          this.destructors.delete(old_specifier);
+
+          try
+          {
+            for (const callback of callbacks)
+            {
+              callback(this);
+            }
+          }
+          catch (error)
+          {
+            console.error(`Destructor callback error`, error);
+          }
+        }
+
+        // TODO: I think files are getting reloaded multiple times
+        entry.ReloadSync();
+      }
+
+      if (parent)
+      {
+        parent.AddSpecifier(original, entry);
+        parent.AddImport(entry);
+        entry.AddReference(parent);
+      }
+
+      this.parents.set(specifier, entry);
+      this.specifiers.set(entry, specifier);
+
+      return {
+        format: "module",
+        url: specifier,
+        shortCircuit: true,
       };
     }
 
@@ -1361,6 +1588,13 @@ export class Loader extends Layer
   }
 
   async Load(specifier, context, default_loader)
+  {
+    console.log("~~Loading", specifier);
+
+    return default_loader(specifier, context, default_loader);
+  }
+
+  LoadSync(specifier, context, default_loader)
   {
     console.log("~~Loading", specifier);
 
@@ -1729,8 +1963,8 @@ Object.defineProperty(globalThis, Symbol.for("global.taggly.internal"), {
   writable: false,
 });
 
-export function resolve(...args){ return loader.Resolve.apply(loader, args); }
-export function load(...args){ return loader.Load.apply(loader, args); }
+export function resolve(...args){ return loader.ResolveSync.apply(loader, args); }
+export function load(...args){ return loader.LoadSync.apply(loader, args); }
 export function getFormat(...args){ return loader.GetFormat.apply(loader, args); }
 export function getSource(...args){ return loader.GetSource.apply(loader, args); }
 // export function transformSource(...args){ return loader.TransformSource.apply(loader, args); }
