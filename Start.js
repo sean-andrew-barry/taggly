@@ -3,11 +3,4 @@ import { initialize, resolveSync as resolve, loadSync as load } from "./Preloade
 
 registerHooks({ resolve, load });
 
-// const mod = await import("/js/Loader.js");
-
-const data = JSON.parse(process.env.TAGGLY_PACKAGE);
-data.preloads = new Map();
-
-await initialize(data);
-
-// console.log(mod);
+await initialize();

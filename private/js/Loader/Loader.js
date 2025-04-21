@@ -152,96 +152,9 @@ export class Loader {
   IsDevelopment() { return this.#development === true; }
   GetTrusted() { return true; }
 
-  constructor(data = DATA) {
-    // // console.log("CONSTRUCTING LOADER");
-    // const old_loader = data.loader;
-    // data.loader = this;
-
-    // this.#name = data.name;
-    // this.#description = data.description;
-    // this.#port = data.port;
-    // this.#cluster_size = data.cluster_size;
-    // this.#cluster_delay = data.cluster_delay;
-    // this.#author = data.author;
-    // this.#license = data.license;
-    // this.#window_url = data.window_url;
-    // this.#loader_path = data.loader_path;
-
-    // this.#version = data?.npm_config?.version ?? data.version ?? "1.0.0";
-
-    // const parts = this.#version.split(".").map(p =>
-    // {
-    //   const n = Number(p);
-
-    //   if (Number.isNaN(n)) return 0;
-    //   else return n;
-    // });
-
-    // this.#version_major = parts[0];
-    // this.#version_minor = parts[1];
-    // this.#version_patch = parts[2];
-
-    // this.#development = data?.npm_config?.development ?? data?.development ?? false;
-    // this.#instance = data.instance ?? 0;
-    // this.#imported = data.imported ?? new Date();
-
-    // if (data.flags) this.#flags.push(...data.flags);
-    // if (data.domains) this.#domains.push(...data.domains);
-
-    // if (this.#development && !this.#domains.includes("development"))
-    // {
-    //   // console.log("Adding development domain");
-    //   this.#domains.unshift("development");
-    //   // console.log(this.#domains);
-    // }
-
-    // if (data.preloader_url) this.#preloader_url = data.preloader_url;
-
-    // if (old_loader)
-    // {
-    //   for (const layer of old_loader.GetLayers())
-    //   {
-    //     // console.log("Cloning layer", layer.GetNormalized());
-    //     this.#layers.push(new Layer(layer, this));
-
-    //     layer.destructor();
-    //   }
-    // }
-    // else if (data.layers)
-    // {
-    //   for (let i = 0; i < data.layers.length; i++)
-    //   {
-    //     let layer = data.layers[i];
-
-    //     if (typeof(layer) === "string")
-    //     {
-    //       layer = this.CreateLayer(i, layer);
-    //     }
-
-    //     this.#layers.push(layer);
-    //   }
-
-    //   if (data.preloads)
-    //   {
-    //     const preloads = data.preloads;
-
-    //     // Reset these, since the layers are shared between loaders
-    //     data.preloads = new Map();
-
-    //     this.Preloads(preloads);
-    //   }
-    // }
-
-    // this.Destructor(SELF_URL, () =>
-    // {
-    //   console.log("~~~~~~Destructing loader~~~~~~~~");
-    // });
-
-    // this.Start();
-  }
+  constructor() {}
 
   Initialize(data) {
-    console.log("CONSTRUCTING LOADER");
     const old_loader = data.loader;
     data.loader = this;
 
@@ -313,8 +226,6 @@ export class Loader {
       }
     }
 
-    console.log("LAYERS:", this.#layers, data.layers);
-
     // this.Destructor(SELF_URL, () =>
     // {
     //   console.log("~~~~~~Destructing loader~~~~~~~~");
@@ -373,8 +284,6 @@ export class Loader {
 
       this.#loader = this.Query(SELF_URL);
       this.#start = this.Query("/js/Start.js");
-
-      console.log("Starting");
 
       await this.Import("/js/Start.js")
         .then(async mod => {
@@ -910,7 +819,15 @@ export class Loader {
   }
 
   OnResolveSync(specifier, context, default_resolver) {
-    // console.log("Resolving", specifier, context.parentURL);
+    if (context.parentURL?.includes("/node_modules/")) {
+      const result = default_resolver(specifier, context, default_resolver);
+
+      if (!result.url.includes("/node_modules/") && !DATA.resolve_skips.has(specifier)) {
+        throw new Error(`The node_module file "${context.parentURL}" cannot import "${result.url}" because it is not in the layer hierarchy. For security, layer files can only be imported by other layer files.`);
+      }
+
+      return result;
+    }
 
     if (context.conditions && (context.conditions[0] !== "node" || context.conditions[1] !== "import")) {
       console.warn("Unexpected import conditions", context.conditions, "on import", specifier);
@@ -933,7 +850,7 @@ export class Loader {
 
     this.#requests += 1;
 
-    if (this.data.resolve_skips.has(specifier)) {
+    if (DATA.resolve_skips.has(specifier)) {
       const resolved = default_resolver(specifier, context, default_resolver);
 
       // If we are in Contextify mode and it's a commonjs module
@@ -1534,7 +1451,7 @@ export class Loader {
         entry.Starting(url);
         const data = entry.GetDataSync();
 
-        console.log("DATA:", entry.GetNormalized());
+        // console.log("DATA:", entry.GetNormalized());
 
         if (data) {
           this.#lines += entry.GetLines();

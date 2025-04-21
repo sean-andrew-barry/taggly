@@ -87,7 +87,7 @@ export async function initialize()
   
   try
   {
-    console.log("~~~Imported Loader");
+    // console.log("~~~Imported Loader");
     await loader.Initialize(data);
     await loader.Start();
   }
@@ -444,8 +444,6 @@ function ResolverSync(specifier, context, default_resolve)
 {
   try
   {
-    // console.log(Trim(context.parentURL), specifier);
-
     const loader = data.loader;
 
     // As soon as there is a loader, hand control over to it
@@ -736,6 +734,9 @@ export async function resolve(specifier, context, default_resolve)
 
 export function resolveSync(specifier, context, default_resolve)
 {
+  // console.log("Resolving:", specifier, "from", context.parentURL);
+  // console.log("Resolving:", specifier);
+
   if (context.parentURL && !PARENTS.has(context.parentURL))
   {
     context.parent = {
@@ -781,6 +782,8 @@ export function resolveSync(specifier, context, default_resolve)
   const result = ResolverSync(specifier, context, default_resolve);
   // result.shortCircuit = false;
   // console.log(result);
+
+  // console.log("Resolving:", result.url);
   
   // console.log("Module", Trim(context.parentURL), "imported", Trim(result.url));
 
@@ -865,6 +868,7 @@ export async function load(url, context, default_load)
 
 export function loadSync(url, context, default_load)
 {
+  // console.log("Loading:", url);
   // console.log("~~~FINISHING~~~", Trim(url));
 
   if (RESOLVE_SKIPS.has(url))

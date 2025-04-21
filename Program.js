@@ -809,35 +809,20 @@ export class Program extends Keyboard {
     pkg.resolve_skips = new Set([
       ...Module.builtinModules,
       ...Module.builtinModules.map(m => "node:" + m), // Add all the builtins with their node: prefix
-      "greenlock",
-      "jsdom",
-      "memfs",
-      "mongodb",
-      "node-fetch",
-      "node-forge",
-      "nodemailer",
-      "rollup",
-      "terser",
-      "webpack",
-      "webpack-virtual-modules",
-      "ws",
-      "terser-webpack-plugin",
     ]);
     pkg.instance = 0;
-
     pkg.buffer_bytes ??= 1024 * 1024;
     pkg.max_buffer_bytes ??= pkg.buffer_bytes * 64;
 
-    if (!this.buffer) {
-      this.buffer = new SharedArrayBuffer(pkg.buffer_bytes, { maxByteLength: pkg.max_buffer_bytes });
-      const view = new DataView(this.buffer, 0);
-      // view.setUint32(0, 0); // 
-      view.setInt32(4, this.buffer.byteLength - 4, true);
-      // console.log("Writing length", this.buffer.byteLength - 4, view.getInt32(4));
-    }
+    // if (!this.buffer) {
+    //   this.buffer = new SharedArrayBuffer(pkg.buffer_bytes, { maxByteLength: pkg.max_buffer_bytes });
+    //   const view = new DataView(this.buffer, 0);
+    //   // view.setUint32(0, 0); // 
+    //   view.setInt32(4, this.buffer.byteLength - 4, true);
+    //   // console.log("Writing length", this.buffer.byteLength - 4, view.getInt32(4));
+    // }
 
-    // this.buffer ??= new SharedArrayBuffer(pkg.buffer_bytes);
-    pkg.buffer = this.buffer;
+    // pkg.buffer = this.buffer;
 
     // pkg.AddFlag("--trace-warnings");
     // pkg.AddFlag("--trace-uncaught");
