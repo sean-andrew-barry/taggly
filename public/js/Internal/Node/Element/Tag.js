@@ -3859,6 +3859,181 @@ export class Tag extends Element
 
   Inset(v, i){ return this.SetStyle("inset", v, i); }
 
+  Rule(name, value) {
+
+  }
+
+  Examples() {
+    new Div().FontSizeSM().HoverFontSizeMD();
+    new Div().FontSize(4).HoverFontSize(8);
+    new Div().FontSize(4).FontSize(8, S.HoverMD);
+    new Div().PY(4).PY(8, S.MD).ColorBlue(600).ColorBlue().ColorBlue(200, S.Dark);
+    new Div().IfHover(t => t.FontSizeMD(), t => t.FontSizeSM());
+    new Div().PY(4, Hover(8), MD(Hover(12))).TextGray(950, Dark());
+    new Div().PY(4).PY(8, Hover).PY(12, MD, Hover).TextGray(950).TextWhite(Dark);
+    new Div().PY(4).PY(new Hover(8)).PY(new MD(new Hover(12))).TextGray(950).TextWhite(new Dark());
+    new Div()
+    .PY(4)
+    .PY(Hover(8))
+    .PY(MD.Hover(12))
+    .TextGray(950)
+    .TextGray(Dark(0));
+
+    0x1b69b4bacd05f15
+    0x1000
+    0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff;
+    0xffffffffffffffffffffffffffffffff;
+
+    new Div()
+    .PY(4)
+    .PY(8, HOVER)
+    .PY(12, MD | HOVER)
+    .TextGray(950)
+    .TextGray(0, DARK)
+    .BgBlue(400, HOVER)
+    .BgBlueHover(400, HOVER)
+    .BgBlueOpacity(400, 0.5, HOVER);
+
+    return new Div().Flex().ItemsCenter().Gap(4).RoundedLG().BgWhite().P(6).ShadowMD().Outline().OutlineBlack(0.05).BgGray(800, 1, S.Dark).Add(
+      new Span().InlineFlex().Shrink(0).RoundedFull().Border().BorderPink(300).BgPink(100).P(2).BorderPink(400, 0.1).BgPink(400, 0.1, S.Dark).Add(
+        new SVG().Size(6).StrokePink(700).StrokePink(500, 1, S.Dark).Add(/* ... */),
+      ),
+      new Div().Add(
+        new P().TextGray(700).TextGray(400, 1, S.Dark).Add(
+          new Span().FontMedium().TextGray(950).TextWhite(1, S.Dark).Add("Tom Watson"),
+          " mentioned you in ",
+          new Span().FontMedium().TextGray(950).TextWhite(1, S.Dark).Add("Logo redesign"),
+        ),
+        new Time().MT(1).Block().TextGray(500).DateTime("9:37").Add("9:37am"),
+      ),
+    );
+  }
+
+  static #hex_code_lut = Uint8Array.from({ length: 256 }, (_, i) =>
+    i >= 48 && i <= 57 ? i - 48 :
+    ((i | 32) >= 97 && (i | 32) <= 102) ? ((i | 32) - 87) :
+    255
+  );
+
+  static #hex_code_buffer = new Uint8Array(16);
+  static #flag_buffer = new Uint32Array(this.#hex_code_buffer);
+  static #style_cache = new Map();
+
+  #DecodeHex(string) {
+    const lut = this.constructor.#hex_code_lut;
+    const buffer = this.constructor.#hex_code_buffer;
+    
+    for (let i = 0; i < string.length; i += 2) {
+      const n1 = lut[string.charCodeAt(i)];
+      const n2 = lut[string.charCodeAt(i + 1)];
+      buffer[i / 2] = (n1 << 4) + n2;
+    }
+
+    return buffer;
+  }
+
+  #GetPrefix(flags) {
+    let parts = [];
+    if (flags & F.Dark) parts.push("Dark");
+    if (flags & F.Light) parts.push("Light");
+    if (flags & F.Light) parts.push("Light");
+
+    if (flags & F.SM) parts.push("sm");
+    if (flags & F.MD) parts.push("md");
+    if (flags & F.LG) parts.push("lg");
+    if (flags & F.XL) parts.push("xl");
+    if (flags & F.XL2) parts.push("xl2");
+
+    return parts.join("-");
+  }
+
+  #GetPostfix(flags) {
+    let parts = [];
+    if (flags & F.Hover) parts.push("Hover");
+    if (flags & F.Active) parts.push("Active");
+    if (flags & F.Checked) parts.push("Checked");
+    if (flags & F.Focus) parts.push("Focus");
+    if (flags & F.FocusWithin) parts.push("FocusWithin");
+    if (flags & F.FocusVisible) parts.push("FocusVisible");
+    if (flags & F.Visited) parts.push("Visited");
+    if (flags & F.Enabled) parts.push("Enabled");
+    if (flags & F.Disabled) parts.push("Disabled");
+    if (flags & F.First) parts.push("First");
+    if (flags & F.Last) parts.push("Last");
+    if (flags & F.Only) parts.push("Only");
+    if (flags & F.Odd) parts.push("Odd");
+    if (flags & F.Even) parts.push("Even");
+    if (flags & F.FirstOfType) parts.push("FirstOfType");
+    if (flags & F.LastOfType) parts.push("LastOfType");
+    if (flags & F.Empty) parts.push("Empty");
+    if (flags & F.Required) parts.push("Required");
+    if (flags & F.Optional) parts.push("Optional");
+    if (flags & F.ReadOnly) parts.push("ReadOnly");
+    if (flags & F.ReadWrite) parts.push("ReadWrite");
+    if (flags & F.Valid) parts.push("Valid");
+    if (flags & F.Invalid) parts.push("Invalid");
+    if (flags & F.PlaceholderShown) parts.push("PlaceholderShown");
+    if (flags & F.UserInvalid) parts.push("UserInvalid");
+    if (flags & F.InRange) parts.push("InRange");
+    if (flags & F.OutOfRange) parts.push("OutOfRange");
+    if (flags & F.Open) parts.push("Open");
+    if (flags & F.Before) parts.push("Before");
+    if (flags & F.After) parts.push("After");
+
+    return parts.join(":");
+  }
+
+  #BuildStyle(name, value, flags) {
+    const cache = this.constructor.#style_cache;
+    let style = cache.get(flags);
+    if (!style) {
+      style = new Style();
+      cache.set(flags, style);
+
+      this.#DecodeHex(flags.toString(16));
+      const buffer = this.constructor.#flag_buffer;
+      const prefix = this.#GetPrefix(buffer);
+      const postfix = this.#GetPostfix(buffer);
+      style.SetAttribute("data-prefix", prefix);
+      style.SetAttribute("data-postfix", postfix);
+    }
+
+    return this;
+  }
+
+  PY(value, flags) { return this.#BuildStyle("py", value, flags); }
+
+  Flag(flags = F.None) {
+    if (flags === F.None) return "";
+
+    if (flags & F.Dark) {
+      if (flags & F.Hover) {
+        if (flags & F.SM) return "-dark-hover-sm";
+        if (flags & F.MD) return "-dark-hover-md";
+        if (flags & F.LG) return "-dark-hover-lg";
+        if (flags & F.XL) return "-dark-hover-xl";
+        if (flags & F.XL2) return "-dark-hover-xl2";
+      }
+
+      if (flags & F.SM) return "-dark-sm";
+      if (flags & F.MD) return "-dark-md";
+      if (flags & F.LG) return "-dark-lg";
+      if (flags & F.XL) return "-dark-xl";
+      if (flags & F.XL2) return "-dark-xl2";
+    }
+    if (flags & F.Light) {
+      if (flags & F.SM) return "-light-sm";
+      if (flags & F.MD) return "-light-md";
+      if (flags & F.LG) return "-light-lg";
+      if (flags & F.XL) return "-light-xl";
+      if (flags & F.XL2) return "-light-xl2";
+    }
+  }
+
+  TW(name, value, flags = F.None)
+  {
+  }
+
   p(...args){ return new Tags.P().Append(...args); }
   a(...args){ return new Tags.A().Append(...args); }
   div(...args){ return new Tags.Div().Append(...args); }
