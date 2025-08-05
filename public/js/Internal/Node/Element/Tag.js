@@ -3879,10 +3879,16 @@ export class Tag extends Element
     .TextGray(950)
     .TextGray(Dark(0));
 
-    0x1b69b4bacd05f15
-    0x1000
-    0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff;
-    0xffffffffffffffffffffffffffffffff;
+    // 0x1b69b4bacd05f15
+    // 0x1000
+    // 0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff;
+    // 0xffffffffffffffffffffffffffffffff;
+
+    // <div class="bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% ..."></div>
+
+    new Div().Bg(F.ToRight, F.Indigo500 | F.Percent10, F.Sky500 | F.Percent30, F.Emerald500 | F.Percent90);
+    new Div().Bg(F.Indigo500 | F.Stop10 | F.Sky500 | F.Stop30 | F.Emerald500 | F.Stop90 | F.ToRight | F.BlueToGreen);
+    // new Div().Bg(F.ToRight, F.Indigo500 | 10n, F.Sky500 | 30n, F.Emerald500 | 90n);
 
     new Div()
     .PY(4)
@@ -3893,6 +3899,30 @@ export class Tag extends Element
     .BgBlue(400, HOVER)
     .BgBlueHover(400, HOVER)
     .BgBlueOpacity(400, 0.5, HOVER);
+
+    new Div()
+    .BG(F.Blue500 | F.Opacity50 | F.Dark) // In dark mode, use a blue-500 background at 50% opacity
+    .BG(F.Blue500 | F.Dark | F.Hover) // In dark mode and while hovering, remove the opacity
+    .PY(4n)
+    .PY(8n | F.Hover)
+    .PY(12n | F.MD | F.Hover)
+    .BgFrom(F.Red500)
+    .BgTo(F.Orange600)
+    ;
+
+    return new Div().Flex().Items(F.Center).Gap(4n).Rounded(F.Large).BG(F.White).P(6n).Shadow(F.Medium).Outline(F.Black | F.Opacity5).BG(F.Gray800 | F.Dark).Add(
+      new Span().InlineFlex().Shrink(0n).Rounded(F.Full).Border(F.Pink300).BG(F.Pink100).P(2n).Border(F.Pink400 | F.Opacity10).BG(F.Pink400 | F.Opacity10 | F.Dark).Add(
+        new SVG().Size(6n).Stroke(F.Pink700).Stroke(F.Pink500 | F.Dark).Add(/* ... */),
+      ),
+      new Div().Add(
+        new P().Text(F.Gray700).Text(F.Gray400 | F.Dark).Add(
+          new Span().Font(F.Medium).Text(F.Gray950).Text(F.White | F.Dark).Add("Tom Watson"),
+          " mentioned you in ",
+          new Span().Font(F.Medium).Text(F.Gray950).Text(F.White | F.Dark).Add("Logo redesign"),
+        ),
+        new Time().MT(1n).Block().Text(F.Gray500).DateTime("9:37").Add("9:37am"),
+      ),
+    );
 
     return new Div().Flex().ItemsCenter().Gap(4).RoundedLG().BgWhite().P(6).ShadowMD().Outline().OutlineBlack(0.05).BgGray(800, 1, S.Dark).Add(
       new Span().InlineFlex().Shrink(0).RoundedFull().Border().BorderPink(300).BgPink(100).P(2).BorderPink(400, 0.1).BgPink(400, 0.1, S.Dark).Add(
@@ -3909,129 +3939,113 @@ export class Tag extends Element
     );
   }
 
-  static #hex_code_lut = Uint8Array.from({ length: 256 }, (_, i) =>
-    i >= 48 && i <= 57 ? i - 48 :
-    ((i | 32) >= 97 && (i | 32) <= 102) ? ((i | 32) - 87) :
-    255
-  );
-
-  static #hex_code_buffer = new Uint8Array(16);
-  static #flag_buffer = new Uint32Array(this.#hex_code_buffer);
-  static #style_cache = new Map();
-
-  #DecodeHex(string) {
-    const lut = this.constructor.#hex_code_lut;
-    const buffer = this.constructor.#hex_code_buffer;
-    
-    for (let i = 0; i < string.length; i += 2) {
-      const n1 = lut[string.charCodeAt(i)];
-      const n2 = lut[string.charCodeAt(i + 1)];
-      buffer[i / 2] = (n1 << 4) + n2;
-    }
-
-    return buffer;
-  }
-
   #GetPrefix(flags) {
-    let parts = [];
-    if (flags & F.Dark) parts.push("Dark");
-    if (flags & F.Light) parts.push("Light");
-    if (flags & F.Light) parts.push("Light");
+    const parts = [];
+    const media = [];
 
-    if (flags & F.SM) parts.push("sm");
-    if (flags & F.MD) parts.push("md");
-    if (flags & F.LG) parts.push("lg");
-    if (flags & F.XL) parts.push("xl");
-    if (flags & F.XL2) parts.push("xl2");
+    if (flags.Has(F.Dark)) { parts.push("dark"); media.push("(prefers-color-scheme: dark)"); }
+    if (flags.Has(F.Light)) { parts.push("light"); media.push("(prefers-color-scheme: light)"); }
 
-    return parts.join("-");
+    if (flags.Has(F.SM)) { parts.push("sm"); media.push("(width >= 40rem)"); }
+    if (flags.Has(F.MD)) { parts.push("md"); media.push("(width >= 48rem)"); }
+    if (flags.Has(F.LG)) { parts.push("lg"); media.push("(width >= 64rem)"); }
+    if (flags.Has(F.XL)) { parts.push("xl"); media.push("(width >= 80rem)"); }
+    if (flags.Has(F.XL2)) { parts.push("xl2"); media.push("(width >= 96rem)"); }
+
+    return [
+      parts.length > 0 ? parts.join("-") + "-" : "",
+      media.join(" and ")
+    ];
   }
 
   #GetPostfix(flags) {
     let parts = [];
-    if (flags & F.Hover) parts.push("Hover");
-    if (flags & F.Active) parts.push("Active");
-    if (flags & F.Checked) parts.push("Checked");
-    if (flags & F.Focus) parts.push("Focus");
-    if (flags & F.FocusWithin) parts.push("FocusWithin");
-    if (flags & F.FocusVisible) parts.push("FocusVisible");
-    if (flags & F.Visited) parts.push("Visited");
-    if (flags & F.Enabled) parts.push("Enabled");
-    if (flags & F.Disabled) parts.push("Disabled");
-    if (flags & F.First) parts.push("First");
-    if (flags & F.Last) parts.push("Last");
-    if (flags & F.Only) parts.push("Only");
-    if (flags & F.Odd) parts.push("Odd");
-    if (flags & F.Even) parts.push("Even");
-    if (flags & F.FirstOfType) parts.push("FirstOfType");
-    if (flags & F.LastOfType) parts.push("LastOfType");
-    if (flags & F.Empty) parts.push("Empty");
-    if (flags & F.Required) parts.push("Required");
-    if (flags & F.Optional) parts.push("Optional");
-    if (flags & F.ReadOnly) parts.push("ReadOnly");
-    if (flags & F.ReadWrite) parts.push("ReadWrite");
-    if (flags & F.Valid) parts.push("Valid");
-    if (flags & F.Invalid) parts.push("Invalid");
-    if (flags & F.PlaceholderShown) parts.push("PlaceholderShown");
-    if (flags & F.UserInvalid) parts.push("UserInvalid");
-    if (flags & F.InRange) parts.push("InRange");
-    if (flags & F.OutOfRange) parts.push("OutOfRange");
-    if (flags & F.Open) parts.push("Open");
-    if (flags & F.Before) parts.push("Before");
-    if (flags & F.After) parts.push("After");
+    if (flags.Has(F.Hover)) parts.push("hover");
+    if (flags.Has(F.Active)) parts.push("active");
+    if (flags.Has(F.Checked)) parts.push("checked");
+    if (flags.Has(F.Focus)) parts.push("focus");
+    if (flags.Has(F.FocusWithin)) parts.push("focus-within");
+    if (flags.Has(F.FocusVisible)) parts.push("focus-visible");
+    if (flags.Has(F.Visited)) parts.push("visited");
+    if (flags.Has(F.Enabled)) parts.push("enabled");
+    if (flags.Has(F.Disabled)) parts.push("disabled");
+    if (flags.Has(F.First)) parts.push("first");
+    if (flags.Has(F.Last)) parts.push("last");
+    if (flags.Has(F.Only)) parts.push("only");
+    if (flags.Has(F.Odd)) parts.push("odd");
+    if (flags.Has(F.Even)) parts.push("even");
+    if (flags.Has(F.FirstOfType)) parts.push("first-of-type");
+    if (flags.Has(F.LastOfType)) parts.push("last-of-type");
+    if (flags.Has(F.Empty)) parts.push("empty");
+    if (flags.Has(F.Required)) parts.push("required");
+    if (flags.Has(F.Optional)) parts.push("optional");
+    if (flags.Has(F.ReadOnly)) parts.push("read-only");
+    if (flags.Has(F.ReadWrite)) parts.push("read-write");
+    if (flags.Has(F.Valid)) parts.push("valid");
+    if (flags.Has(F.Invalid)) parts.push("invalid");
+    if (flags.Has(F.PlaceholderShown)) parts.push("placeholder-shown");
+    if (flags.Has(F.UserInvalid)) parts.push("user-invalid");
+    if (flags.Has(F.InRange)) parts.push("in-range");
+    if (flags.Has(F.OutOfRange)) parts.push("out-of-range");
+    if (flags.Has(F.Open)) parts.push("open");
+    if (flags.Has(F.Before)) parts.push("before");
+    if (flags.Has(F.After)) parts.push("after");
 
-    return parts.join(":");
+    return parts.length > 0 ? ":" + parts.join(":") : "";
   }
 
-  #BuildStyle(name, value, flags) {
-    const cache = this.constructor.#style_cache;
-    let style = cache.get(flags);
-    if (!style) {
-      style = new Style();
-      cache.set(flags, style);
-
-      this.#DecodeHex(flags.toString(16));
-      const buffer = this.constructor.#flag_buffer;
-      const prefix = this.#GetPrefix(buffer);
-      const postfix = this.#GetPostfix(buffer);
-      style.SetAttribute("data-prefix", prefix);
-      style.SetAttribute("data-postfix", postfix);
+  #TW(key, value, bigint = F.None, ...properties) {
+    let flags = FLAGS_CACHE.get(bigint);
+    if (!flags) {
+      // Create a new flags
+      flags = new Flags(bigint);
+      FLAGS_CACHE.set(bigint, flags);
     }
+
+    // Check if we have a stylesheet for this media string already
+    const media = flags.GetMedia();
+    let style = STYLE_CACHE.get(media);
+    if (!style) {
+      // Create a new stylesheet 
+      style = new Style();
+      STYLE_CACHE.set(media, style);
+
+      style.Media(media);
+    }
+
+    const prefix = flags.GetPrefix();
+    const postfix = flags.GetPostfix();
+
+    // Build the attribute name, which does not include postfixes
+    const name = "data-" + prefix + key;
+
+    // Build the CSS selector
+    const selector = `[${name}]${postfix}`;
+
+    // If the stylesheet doesn't already have a rule for this
+    if (!style.HasRule(selector)) {
+      // Build the CSS property list, which selects the attribute to get the value
+      // TODO: Figure out how I should set the data type and calculation...
+      const props = properties.map(p => `${p}: attr(${name});`).join(" ");
+
+      // Build and append the full CSS rule to the stylesheet
+      style.AppendRule(`${selector} { ${props} }`);
+    }
+
+    // Finally, set the attribute on this element (it's already prefixed with `data-`)
+    this.SetAttribute(name, value);
 
     return this;
   }
 
-  PY(value, flags) { return this.#BuildStyle("py", value, flags); }
+  PY(flags) { return this.#TW(flags | F.PY); }
 
-  Flag(flags = F.None) {
-    if (flags === F.None) return "";
-
-    if (flags & F.Dark) {
-      if (flags & F.Hover) {
-        if (flags & F.SM) return "-dark-hover-sm";
-        if (flags & F.MD) return "-dark-hover-md";
-        if (flags & F.LG) return "-dark-hover-lg";
-        if (flags & F.XL) return "-dark-hover-xl";
-        if (flags & F.XL2) return "-dark-hover-xl2";
-      }
-
-      if (flags & F.SM) return "-dark-sm";
-      if (flags & F.MD) return "-dark-md";
-      if (flags & F.LG) return "-dark-lg";
-      if (flags & F.XL) return "-dark-xl";
-      if (flags & F.XL2) return "-dark-xl2";
-    }
-    if (flags & F.Light) {
-      if (flags & F.SM) return "-light-sm";
-      if (flags & F.MD) return "-light-md";
-      if (flags & F.LG) return "-light-lg";
-      if (flags & F.XL) return "-light-xl";
-      if (flags & F.XL2) return "-light-xl2";
-    }
+  TextGray(value, flags) {
+    return this.#TW("text-gray", value, flags, v => `color: var(--text-gray, 1);`);
   }
 
-  TW(name, value, flags = F.None)
-  {
+  BgGray(value, flags) {
+    return this.#TW("bg-gray", value, flags, v => `--tg-bg-opacity: 1; background-color: rgb(0 0 0 / var(--tg-bg-opacity, 1));`);
   }
 
   p(...args){ return new Tags.P().Append(...args); }
