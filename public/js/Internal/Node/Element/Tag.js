@@ -2786,7 +2786,7 @@ export class Tag extends Element
   OnKeyGraveAccent(fn, o){ return this.OnKey(192, fn, o); }
   OnKeyOpenBracket(fn, o){ return this.OnKey(219, fn, o); }
   OnKeyBackSlash(fn, o){ return this.OnKey(220, fn, o); }
-  OnKeyCloseBraket(fn, o){ return this.OnKey(221, fn, o); }
+  OnKeyCloseBracket(fn, o){ return this.OnKey(221, fn, o); }
   OnKeySingleQuote(fn, o){ return this.OnKey(222, fn, o); }
 
   //---------------------------------
