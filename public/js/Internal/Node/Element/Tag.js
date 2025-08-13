@@ -3910,33 +3910,164 @@ export class Tag extends Element
     .BgTo(F.Orange600)
     ;
 
-    return new Div().Flex().Items(F.Center).Gap(4n).Rounded(F.Large).BG(F.White).P(6n).Shadow(F.Medium).Outline(F.Black | F.Opacity5).BG(F.Gray800 | F.Dark).Add(
-      new Span().InlineFlex().Shrink(0n).Rounded(F.Full).Border(F.Pink300).BG(F.Pink100).P(2n).Border(F.Pink400 | F.Opacity10).BG(F.Pink400 | F.Opacity10 | F.Dark).Add(
-        new SVG().Size(6n).Stroke(F.Pink700).Stroke(F.Pink500 | F.Dark).Add(/* ... */),
+    // Design 1
+    new Div()
+    .Flex()
+    .Items(F.Center)
+    .Gap(4n)
+    .Rounded(F.Large)
+    .BG(F.White)
+    .P(6n)
+    .Shadow(F.Medium)
+    .Outline(F.Black | F.Opacity5)
+    .BG(F.Gray800 | F.OnDark)
+    .Add(
+      new Span()
+      .InlineFlex()
+      .Shrink(0n)
+      .Rounded(F.Full)
+      .Border(F.Pink300)
+      .BG(F.Pink100)
+      .P(2n)
+      .Border(F.Pink400 | F.Opacity10)
+      .BG(F.Pink400 | F.Opacity10 | F.OnDark)
+      .Add(
+        new SVG().Size(6n).Stroke(F.Pink700).Stroke(F.Pink500 | F.OnDark).Add(/* ... */),
       ),
       new Div().Add(
-        new P().Text(F.Gray700).Text(F.Gray400 | F.Dark).Add(
-          new Span().Font(F.Medium).Text(F.Gray950).Text(F.White | F.Dark).Add("Tom Watson"),
+        new P()
+        .Text(F.Gray700)
+        .Text(F.Gray400 | F.OnDark)
+        .Add(
+          new Span()
+          .Font(F.Medium)
+          .Text(F.Gray950)
+          .Text(F.White | F.OnDark)
+          .Add("Tom Watson"),
           " mentioned you in ",
-          new Span().Font(F.Medium).Text(F.Gray950).Text(F.White | F.Dark).Add("Logo redesign"),
+          new Span()
+          .Font(F.Medium)
+          .Text(F.Gray950)
+          .Text(F.White | F.OnDark)
+          .Add("Logo redesign"),
         ),
         new Time().MT(1n).Block().Text(F.Gray500).DateTime("9:37").Add("9:37am"),
       ),
     );
 
-    return new Div().Flex().ItemsCenter().Gap(4).RoundedLG().BgWhite().P(6).ShadowMD().Outline().OutlineBlack(0.05).BgGray(800, 1, S.Dark).Add(
-      new Span().InlineFlex().Shrink(0).RoundedFull().Border().BorderPink(300).BgPink(100).P(2).BorderPink(400, 0.1).BgPink(400, 0.1, S.Dark).Add(
-        new SVG().Size(6).StrokePink(700).StrokePink(500, 1, S.Dark).Add(/* ... */),
+    // Design 2
+    new Div().Flex().ItemsCenter().Gap(4).RoundedLG().BgWhite().P(6).ShadowMD().Outline().OutlineBlack(0.05).BgGray(800, F.OnDark).Add(
+      new Span().InlineFlex().Shrink(0).RoundedFull().Border().BorderPink(300).BgPink(100).P(2).BorderPink(400, 0.1).BgPink(400, 0.1, F.OnDark).Add(
+        new SVG().Size(6).StrokePink(700).StrokePink(500, F.OnDark).Add(/* ... */),
       ),
       new Div().Add(
-        new P().TextGray(700).TextGray(400, 1, S.Dark).Add(
-          new Span().FontMedium().TextGray(950).TextWhite(1, S.Dark).Add("Tom Watson"),
+        new P().TextGray(700).TextGray(400, F.OnDark).Add(
+          new Span().FontMedium().TextGray(950).TextWhite(F.OnDark).Add("Tom Watson"),
           " mentioned you in ",
-          new Span().FontMedium().TextGray(950).TextWhite(1, S.Dark).Add("Logo redesign"),
+          new Span().FontMedium().TextGray(950).TextWhite(F.OnDark).Add("Logo redesign"),
         ),
         new Time().MT(1).Block().TextGray(500).DateTime("9:37").Add("9:37am"),
       ),
     );
+
+    // Design 3
+    new Div().Flex().ItemsCenter().Gap(4).RoundedLG().BgWhite().P(6).ShadowMD().Outline().OutlineBlack(F.Opacity5).BgGray800(F.OnDark).Add(
+      new Span().InlineFlex().Shrink(0).RoundedFull().Border().BorderPink300().BgPink100().P(2).BorderPink400(F.Opacity10).BgPink400(F.Opacity10 | F.OnDark).Add(
+        new SVG().Size(6).StrokePink700().StrokePink500(F.OnDark).Add(/* ... */),
+      ),
+      new Div().Add(
+        new P().TextGray700().TextGray400(F.OnDark).Add(
+          new Span().FontMedium().TextGray950().TextWhite(F.OnDark).Add("Tom Watson"),
+          " mentioned you in ",
+          new Span().FontMedium().TextGray950().TextWhite(F.OnDark).Add("Logo redesign"),
+        ),
+        new Time().MT(1).Block().TextGray500().DateTime("9:37").Add("9:37am"),
+      ),
+    );
+
+    // Design 4
+    new Div().Flex().Center(F.Items).Gap(4).LG(F.Rounded).White(F.BG).P(6).MD(F.Shadow).Outline().Black(F.Outline | F.Opacity5).Gray800(F.BG | F.OnDark).Add(
+      new Span().InlineFlex().Shrink(0).Full(F.Rounded).Border().Pink300(F.Border).Pink100(F.BG).P(2).Pink400(F.Border | F.Opacity10).Pink400(F.BG | F.Opacity10 | F.OnDark).Add(
+        new SVG().Size(6).Pink700(F.Stroke).Pink500(F.Stroke | F.OnDark).Add(/* ... */),
+      ),
+      new Div().Add(
+        new P().Gray700(F.Text).Gray400(F.Text | F.OnDark).Add(
+          new Span().MD(F.Font).Gray950(F.Text).White(F.Text | F.OnDark).Add("Tom Watson"),
+          " mentioned you in ",
+          new Span().MD(F.Font).Gray950(F.Text).White(F.Text | F.OnDark).Add("Logo redesign"),
+        ),
+        new Time().MT(1).Block().Gray500(F.Text).DateTime("9:37").Add("9:37am"),
+      ),
+    );
+
+    // Design 5
+    new Div()
+    .Flex()
+    .Items(F.Center)
+    .Gap(4n)
+    .Rounded(F.Large)
+    .BG(F.White)
+    .P(6n)
+    .Shadow(F.Medium)
+    .Outline(F.Black | F.Opacity5)
+    .BG(F.Gray800 | F.OnDark)
+    .Add(
+      // new Style().Flex().Items(F.Center),
+      // F.Flex,
+      // F.Items | F.Center,
+      // F.Gap | 4n,
+      // F.BG | F.White,
+      // F.P | 6n,
+      // F.Shadow | F.Medium,
+      // F.Outline | F.Black | F.Opacity5,
+      // F.BG | F.Gray800 | F.OnDark,
+      new Span()
+      .InlineFlex()
+      .Shrink(0n)
+      .Rounded(F.Full)
+      .Border(F.Pink300)
+      .BG(F.Pink100)
+      .P(2n)
+      .Border(F.Pink400 | F.Opacity10)
+      .BG(F.Pink400 | F.Opacity10 | F.OnDark)
+      .Add(
+        new SVG().Size(6n).Stroke(F.Pink700).Stroke(F.Pink500 | F.OnDark).Add(/* ... */),
+      ),
+      new Div().Add(
+        new P()
+        .Text(F.Gray700)
+        .Text(F.Gray400 | F.OnDark)
+        .Add(
+          new Span()
+          .Font(F.Medium)
+          .Text(F.Gray950)
+          .Text(F.White | F.OnDark)
+          .Add("Tom Watson"),
+          " mentioned you in ",
+          new Span()
+          .Font(F.Medium)
+          .Text(F.Gray950)
+          .Text(F.White | F.OnDark)
+          .Add("Logo redesign"),
+        ),
+        new Time().MT(1n).Block().Text(F.Gray500).DateTime("9:37").Add("9:37am"),
+      ),
+    );
+
+    // Design 3
+    new Div(
+      new Span(
+        new SVG().Size(6).StrokePink(700).StrokePink(500, F.OnDark).Add(/* ... */),
+      ).InlineFlex().Shrink(0).RoundedFull().Border().BorderPink(300).BgPink(100).P(2).BorderPink(400, 0.1).BgPink(400, 0.1, F.OnDark),
+      new Div(
+        new P(
+          new Span("Tom Watson").FontMedium().TextGray(950).TextWhite(F.OnDark),
+          " mentioned you in ",
+          new Span("Logo redesign").FontMedium().TextGray(950).TextWhite(F.OnDark),
+        ).TextGray(700).TextGray(400, F.OnDark),
+        new Time("9:37am").MT(1).Block().TextGray(500).DateTime("9:37"),
+      ),
+    ).Flex().ItemsCenter().Gap(4).RoundedLG().BgWhite().P(6).ShadowMD().Outline().OutlineBlack(0.05).BgGray(800, F.OnDark);
   }
 
   #GetPrefix(flags) {
