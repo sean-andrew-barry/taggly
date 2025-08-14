@@ -3386,9 +3386,9 @@ export class Tag extends Element
   FlexDirectionRowReverse(i){ return this.FlexDirection("row-reverse", i); }
   FlexDirectionColumn(i){ return this.FlexDirection("column", i); }
   FlexDirectionColumnReverse(i){ return this.FlexDirection("column-reverse", i); }
-  FlexInitital(i){ return this.Flex("0 1 auto", i); } // Allow a flex item to shrink but not grow
+  FlexInitial(i){ return this.Flex("0 1 auto", i); } // Allow a flex item to shrink but not grow
   Flex1(i){ return this.Flex("1 1 0%", i); } // Grow and shrink as needed
-  FlexAuto(i){ return this.Flex("1 1 auto", i); } // Grow and shrink as needed, incuding initial size
+  FlexAuto(i){ return this.Flex("1 1 auto", i); } // Grow and shrink as needed, including initial size
   FlexNone(i){ return this.Flex("none", i); } // Can't grow/shrink
   FlexCenter(i)
   {

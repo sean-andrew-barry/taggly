@@ -432,7 +432,7 @@ export class Welcome extends Docs
 
       P.TL`Here's a visualization of the layer system.`,
 
-      this.VisializeLoader(),
+      this.VisualizeLoader(),
 
       P.TL`When the ${this.loader} gets a specifier from an import statement, like ${this.div_specifier}, it begins by iterating over each layer, and then each domain in each layer. It will check if there is a file at each of these paths:`,
 
@@ -731,7 +731,7 @@ export class Welcome extends Docs
       P.TL`Much more readable! If you take a look at the source code for this page I am writing now, you will see this style is used constantly.`,
 
       new Div("notification is-info").Add(
-        P.TL`And if you aren't familiar with how taggled template literals work, you might be concerned that ${this.tl} works by some weird string manipulation and has terrible performance. It doesn't. It actually has great performance, so use it freely.`,
+        P.TL`And if you aren't familiar with how tagged template literals work, you might be concerned that ${this.tl} works by some weird string manipulation and has terrible performance. It doesn't. It actually has great performance, so use it freely.`,
       ),
 
       // P.TL`Now I want to stress that ${Em.TL`usually`} you will just be using the ${this.add} and ${this.text} functions. But in cases where you have lots of text heavily mixed with lots of tags, the ${this.tl} function is very handy!`,
@@ -806,7 +806,7 @@ export class Welcome extends Docs
   }
 
   #loader_order = 1;
-  VisializeLoader(layers = [this.website, "Taggly"], domains)
+  VisualizeLoader(layers = [this.website, "Taggly"], domains)
   {
     this.#loader_order = 1;
 
