@@ -5,9 +5,9 @@ import "/flag#internal";
 
 // import * as Tags from "/js/Tags.js";
 
-import {Symbol as SymbolUtilities} from "/js/Symbol.js";
-import {window} from "/js/Window.js";
-import {Freeze} from "/js/Utility/Freeze.js";
+import { Symbol as SymbolUtilities } from "/js/Symbol.js";
+import { window } from "/js/Window.js";
+import { Freeze } from "/js/Utility/Freeze.js";
 
 const NODE = Symbol("node");
 const TAG = Symbol("tag");
@@ -51,68 +51,62 @@ const {
 } = WindowNode;
 
 let tags_module;
-export class Node
-{
-  static SetTagsModule(value){ tags_module = value; }
-  static GetTagsModule(){ return tags_module; }
-  static GetModules(){ return tags_module; }
-  static GetModule(name){ return this.GetModules()?.[name]; }
+export class Node {
+  static SetTagsModule(value) { tags_module = value; }
+  static GetTagsModule() { return tags_module; }
+  static GetModules() { return tags_module; }
+  static GetModule(name) { return this.GetModules()?.[name]; }
   // static GetSymbol(){ return SymbolUtilities.GetSymbol(this); }
-  static GetSymbol(){ return this.symbol ??= Symbol(this.name); }
+  static GetSymbol() { return this.symbol ??= Symbol(this.name); }
   // static GetModule(name){ return Tags[name]; }
 
-  static NewModule(name, ...args)
-  {
+  static NewModule(name, ...args) {
     const mod = this.GetModule(name);
     if (!mod) throw new Error(`No Tag module found for "${name}". It needs to be exported from "/js/Tags.js"`);
 
     return new mod(...args);
   }
 
-  static GetNodeSymbol(){ return NODE; }
-  static GetLocalNameSymbol(){ return LOCAL_NAME; }
-  static GetTrustedSymbol(){ return TRUSTED; }
-  static GetDangerousSymbol(){ return DANGEROUS; }
-  static GetTrustedWeakSet(){ return TRUSTED_SET; }
-  static GetActionsSymbol(){ return ACTIONS; }
-  static GetNodesWeakMap(){ return NODES; }
-  static GetConstructorCacheObject(){ return CONSTRUCTOR_CACHE; }
+  static GetNodeSymbol() { return NODE; }
+  static GetLocalNameSymbol() { return LOCAL_NAME; }
+  static GetTrustedSymbol() { return TRUSTED; }
+  static GetDangerousSymbol() { return DANGEROUS; }
+  static GetTrustedWeakSet() { return TRUSTED_SET; }
+  static GetActionsSymbol() { return ACTIONS; }
+  static GetNodesWeakMap() { return NODES; }
+  static GetConstructorCacheObject() { return CONSTRUCTOR_CACHE; }
 
-  static GetTag(node){ return node[TAG]; } // Get the tag for a window.Node
-  static HasTag(node){ return node.hasOwnProperty(TAG); }
+  static GetTag(node) { return node[TAG]; } // Get the tag for a window.Node
+  static HasTag(node) { return node.hasOwnProperty(TAG); }
 
   // static IsTrusted(node){ return node.hasOwnProperty(TRUSTED); }
-  static IsDangerous(node){ return node[this.GetDangerousSymbol()] === true; }
-  static IsTrusted(node){ return node[this.GetTrustedSymbol()] === true; }
-  static Trust(node){ node[this.GetTrustedSymbol()] = true; return node; }
+  static IsDangerous(node) { return node[this.GetDangerousSymbol()] === true; }
+  static IsTrusted(node) { return node[this.GetTrustedSymbol()] === true; }
+  static Trust(node) { node[this.GetTrustedSymbol()] = true; return node; }
 
   // Get/Create the Tag for a DOM Node
-  static For(node)
-  {
+  static For(node) {
     if (node === undefined || node === null) return node;
     else return this.GetTag(node) ?? this.Wrap(node);
   }
 
-  static CreateLocalName()
-  {
+  static CreateLocalName() {
     const name = StringUtilities.ToKebabCase(this.name);
     console.warn("Creating local name for", this.name, name);
     return name;
   }
 
-  static GetLocalName(){ return this[this.GetLocalNameSymbol()] ??= this.CreateLocalName(); }
-  static GetMetaURL(){ return import.meta.url; }
-  static GetLocalName(){ return "node"; }
+  static GetLocalName() { return this[this.GetLocalNameSymbol()] ??= this.CreateLocalName(); }
+  static GetMetaURL() { return import.meta.url; }
+  static GetLocalName() { return "node"; }
 
-  static GetNodeValueWeakMap(){ return NODE_VALUE; }
-  static SetNodeValue(node, value){ this.GetNodeValueWeakMap().add(node, value); }
-  static GetNodeValue(node){ return this.GetNodeValueWeakMap().get(node); }
-  static HasNodeValue(node){ return this.GetNodeValueWeakMap().has(node); }
+  static GetNodeValueWeakMap() { return NODE_VALUE; }
+  static SetNodeValue(node, value) { this.GetNodeValueWeakMap().add(node, value); }
+  static GetNodeValue(node) { return this.GetNodeValueWeakMap().get(node); }
+  static HasNodeValue(node) { return this.GetNodeValueWeakMap().has(node); }
 
-  static IsNodeDangerous(node)
-  {
-    switch (node.localName ?? node.nodeName)
-    {
+  static IsNodeDangerous(node) {
+    switch (node.localName ?? node.nodeName) {
       case "SCRIPT":
       case "STYLE":
       case "IFRAME":
@@ -128,18 +122,15 @@ export class Node
     }
   }
 
-  static CreateNodeText(text)
-  {
+  static CreateNodeText(text) {
     const node = window.document.createTextNode(text);
 
     this.Trust(node);
-    node[this.GetTrustedSymbol()] = true;
 
     return node;
   }
 
-  static Custom(name)
-  {
+  static Custom(name) {
     const node = this.CreateNode(name);
 
     const tag = new this();
@@ -149,54 +140,52 @@ export class Node
     return tag;
   }
 
-  static CreateNodeComment(text){ return this.Trust(window.document.createComment(text)); }
-  static CreateNodeDocument(){ return this.Trust(window.document.createDocument()); }
-  static CreateNodeFragment(){ return this.Trust(window.document.createDocumentFragment()); }
-  static CreateNodeAttribute(name){ return this.Trust(window.document.createAttribute(name)); }
-  static CreateNodeAttributeNS(name, ns){ return this.Trust(window.document.createAttributeNS(ns, name)); }
-  static CreateNodeElement(name){ return this.Trust(window.document.createElement(name)); }
-  static CreateNodeElementNS(name, ns){ return this.Trust(window.document.createElementNS(ns, name)); }
+  static CreateNodeComment(text) { return this.Trust(window.document.createComment(text)); }
+  static CreateNodeDocument() { return this.Trust(window.document.createDocument()); }
+  static CreateNodeFragment() { return this.Trust(window.document.createDocumentFragment()); }
+  static CreateNodeAttribute(name) { return this.Trust(window.document.createAttribute(name)); }
+  static CreateNodeAttributeNS(name, ns) { return this.Trust(window.document.createAttributeNS(ns, name)); }
+  static CreateNodeElement(name) { return this.Trust(window.document.createElement(name)); }
+  static CreateNodeElementNS(name, ns) { return this.Trust(window.document.createElementNS(ns, name)); }
 
-  static CreateNode(name, ...actions)
-  {
+  static CreateNode(name, ...actions) {
     let node;
 
-    switch (name)
-    {
+    switch (name) {
       case "#text":
-      {
-        // NOTE: While this makes some sense from a simplicity/design perspective,
-        // it really sucks for performance
+        {
+          // NOTE: While this makes some sense from a simplicity/design perspective,
+          // it really sucks for performance
 
-        node = window.document.createTextNode("");
-      }
+          node = window.document.createTextNode("");
+        }
       case "#document-fragment":
-      {
-        node = this.CreateNodeFragment();
-        break;
-      }
+        {
+          node = this.CreateNodeFragment();
+          break;
+        }
       case "#document":
-      {
-        node = this.CreateNodeDocument();
-        break;
-      }
+        {
+          node = this.CreateNodeDocument();
+          break;
+        }
       case "#comment":
-      {
-        node = this.CreateNodeComment();
-        break;
-      }
+        {
+          node = this.CreateNodeComment();
+          break;
+        }
       // They aren't actually called this in the spec,
       // I'm just doing it for design consistency
       case "#attr":
-      {
-        node = this.CreateNodeAttribute(name);
-        break;
-      }
+        {
+          node = this.CreateNodeAttribute(name);
+          break;
+        }
       default:
-      {
-        node = this.CreateNodeElement(name);
-        break;
-      }
+        {
+          node = this.CreateNodeElement(name);
+          break;
+        }
     }
 
     node[this.GetTrustedSymbol()] = true;
@@ -207,22 +196,17 @@ export class Node
     return node;
   }
 
-  static TrustAll(node)
-  {
+  static TrustAll(node) {
     const attributes = node.attributes;
-    if (attributes)
-    {
-      for (let i = 0; i < attributes.length; i++)
-      {
+    if (attributes) {
+      for (let i = 0; i < attributes.length; i++) {
         this.TrustAll(attributes[i]);
       }
     }
 
     const children = node.childNodes;
-    if (children)
-    {
-      for (let i = 0; i < children.length; i++)
-      {
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
         const child = children[i];
 
         // Skip past any doctype nodes, because they are confused for additional HTML tags
@@ -236,27 +220,24 @@ export class Node
     return node;
   }
 
-  static GetNameFor(node)
-  {
-    switch (node.nodeType)
-    {
+  static GetNameFor(node) {
+    switch (node.nodeType) {
       case ATTRIBUTE_NODE: return "Attr";
       case DOCUMENT_TYPE_NODE: return "DocumentType";
       case COMMENT_NODE: return "Comment";
       case TEXT_NODE: return "Text";
       case DOCUMENT_NODE: return "Document";
       case DOCUMENT_FRAGMENT_NODE:
-      {
-        // TODO: I don't know if this is actually reliable
-        if (node.constructor.name === "ShadowRoot") return "ShadowRoot";
-        else return "Fragment";
-      }
+        {
+          // TODO: I don't know if this is actually reliable
+          if (node.constructor.name === "ShadowRoot") return "ShadowRoot";
+          else return "Fragment";
+        }
       default: return node.nodeName;
     }
   }
 
-  static Wrap(node, parent_tag)
-  {
+  static Wrap(node, parent_tag) {
     // If it's already wrapped, return the tag
     if (this.HasTag(node)) return this.GetTag(node);
 
@@ -269,19 +250,15 @@ export class Node
     const tag = new tag_ctor(node);
 
     const attributes = node.attributes;
-    if (attributes)
-    {
-      for (let i = 0; i < attributes.length; i++)
-      {
+    if (attributes) {
+      for (let i = 0; i < attributes.length; i++) {
         this.Wrap(attributes[i], tag);
       }
     }
 
     const children = node.childNodes;
-    if (children)
-    {
-      for (let i = 0; i < children.length; i++)
-      {
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
         const child = children[i];
 
         this.Wrap(child, tag);
@@ -291,8 +268,7 @@ export class Node
     return tag;
   }
 
-  static Wrap(node, dangerous = true)
-  {
+  static Wrap(node, dangerous = true) {
     // If it's already wrapped, return the tag
     if (this.HasTag(node)) return this.GetTag(node);
 
@@ -306,10 +282,8 @@ export class Node
     const attributes = node.attributes;
 
     // const actions = new Array(attributes?.length ?? 0);
-    if (attributes)
-    {
-      while (attributes.length > 0)
-      {
+    if (attributes) {
+      while (attributes.length > 0) {
         const attribute = attributes[0];
 
         actions.push(attribute.name ?? attribute.localName, [attribute.value]);
@@ -326,10 +300,8 @@ export class Node
     }
 
     const children = node.childNodes;
-    if (children)
-    {
-      for (let i = 0; i < children.length; i++)
-      {
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
         const child = children[i];
 
         this.Wrap(child);
@@ -355,8 +327,7 @@ export class Node
     return tag;
   }
 
-  static Wrap(node, is_dangerous = true)
-  {
+  static Wrap(node, is_dangerous = true) {
     // If it's already wrapped, return the tag
     if (this.HasTag(node)) return this.GetTag(node);
 
@@ -372,13 +343,10 @@ export class Node
     node[this.GetDangerousSymbol()] = is_dangerous;
     node[this.GetActionsSymbol()] = actions;
 
-    if (is_dangerous !== true)
-    {
+    if (is_dangerous !== true) {
       const attributes = node.attributes;
-      if (attributes)
-      {
-        while (attributes.length > 0)
-        {
+      if (attributes) {
+        while (attributes.length > 0) {
           const attribute = attributes[0];
 
           actions.push(attribute.name ?? attribute.localName, [attribute.value]);
@@ -396,10 +364,8 @@ export class Node
     }
 
     const children = node.childNodes;
-    if (children)
-    {
-      for (let i = 0; i < children.length; i++)
-      {
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
         const child = children[i];
 
         this.Wrap(child, is_dangerous);
@@ -410,12 +376,10 @@ export class Node
     return new tag_ctor(node);
   }
 
-  static From(actions, node)
-  {
+  static From(actions, node) {
     const tag = new this(node);
 
-    for (let i = 0; i < actions.length; i += 2)
-    {
+    for (let i = 0; i < actions.length; i += 2) {
       const action = actions[i];
       const args = actions[i + 1];
 
@@ -443,18 +407,15 @@ export class Node
 
   #node;
 
-  constructor(node)
-  {
+  constructor(node) {
     // Freeze(this);
 
-    if (node && node instanceof WindowNode)
-    {
+    if (node && node instanceof WindowNode) {
       this.SetNode(node);
     }
   }
 
-  destructor()
-  {
+  destructor() {
     // console.log("Destructed node", this.GetLocalName());
 
     // const node = this.GetNode();
@@ -464,8 +425,7 @@ export class Node
     // delete this[NODE];
   }
 
-  CreateNode(name = this.constructor.GetLocalName())
-  {
+  CreateNode(name = this.constructor.GetLocalName()) {
     const node = this.constructor.CreateNode(name);
 
     this.SetNode(node);
@@ -474,10 +434,8 @@ export class Node
   }
 
   // When you create a Tag, all of its attributes and children MUST also become tags
-  SetNode(node)
-  {
-    if (!node.hasOwnProperty("tag"))
-    {
+  SetNode(node) {
+    if (!node.hasOwnProperty("tag")) {
       node.tag = this; // TODO: Set this with a descriptor and warn on its use
     }
 
@@ -487,8 +445,7 @@ export class Node
     this.#node = node; // Or use double mapping like above?
     node[TAG] = this;
 
-    if (node.hasOwnProperty(ACTIONS))
-    {
+    if (node.hasOwnProperty(ACTIONS)) {
       const actions = node[ACTIONS];
       this.ApplyEach(actions);
     }
@@ -510,61 +467,52 @@ export class Node
   }
 
   // HasNode(){ return this[NODE] !== undefined; }
-  HasNode(){ return this.#node !== undefined; }
+  HasNode() { return this.#node !== undefined; }
 
-  Node(node)
-  {
+  Node(node) {
     this.SetNode(node);
     return this;
   }
 
   // GetNode(){ return this[NODE] ??= this.CreateNode(); }
-  GetNode(){ return this.#node ??= this.CreateNode(); }
+  GetNode() { return this.#node ??= this.CreateNode(); }
 
-  [TO_NODE](){ return this.GetNode(); }
+  [TO_NODE]() { return this.GetNode(); }
 
-  InsertBefore(child, node)
-  {
+  InsertBefore(child, node) {
     node = this.Convert(node);
 
-    if (child)
-    {
+    if (child) {
       this.GetNode().insertBefore(node, this.Convert(child));
     }
-    else
-    {
+    else {
       this.GetNode().insertBefore(node, null);
     }
 
     return this;
   }
 
-  ReplaceChild(child, replacement)
-  {
+  ReplaceChild(child, replacement) {
     this.GetNode().replaceChild(this.Convert(replacement), this.Convert(child));
     return this;
   }
 
-  RemoveChild(child)
-  {
+  RemoveChild(child) {
     if (child !== undefined) this.GetNode().removeChild(this.Convert(child));
     return this;
   }
 
-  AppendChild(child)
-  {
+  AppendChild(child) {
     child = this.Convert(child);
     if (child !== undefined) this.GetNode().appendChild(child);
     return this;
   }
 
-  Clear()
-  {
+  Clear() {
     let child = this.GetFirstChildNode();
 
-    while (child)
-    {
-      if (child.tag) this.RemoveChild(child);
+    while (child) {
+      if (this.constructor.HasTag(child)) this.RemoveChild(child);
       else this.GetNode().removeChild(child);
 
       child = this.GetFirstChildNode();
@@ -573,10 +521,8 @@ export class Node
     return this;
   }
 
-  Text(text)
-  {
-    if (typeof(text) === "string")
-    {
+  Text(text) {
+    if (typeof text === "string") {
       text = this.constructor.CreateNodeText(text);
       // this.GetNode().textContent = text;
     }
@@ -586,10 +532,28 @@ export class Node
     return this;
   }
 
-  CreateNode(node)
-  {
-    if (!node)
-    {
+  Text(value) {
+    if (typeof value !== "string") {
+      value = String(value);
+    }
+
+    const node = this.GetNode();
+
+    // Fast path: already a single text node child → mutate it
+    const only = node.firstChild;
+    if (only && only.nodeType === TEXT_NODE && only.nextSibling === null) {
+      if (only.data !== value) only.data = value; // minimal churn
+    } else {
+      // Slow path: normalize to one text node
+      node.textContent = value;
+      this.constructor.Trust(node.firstChild);
+    }
+
+    return this;
+  }
+
+  CreateNode(node) {
+    if (!node) {
       const name = this.constructor.GetLocalName();
       node = this.constructor.CreateNode(name);
     }
@@ -599,8 +563,7 @@ export class Node
     return node;
   }
 
-  Trust(node)
-  {
+  Trust(node) {
     return this.constructor.IsNodeDangerous(node) === false;
 
     // console.log("Untrusted node", this.constructor.name, node.localName || node.nodeName, node);
@@ -608,32 +571,30 @@ export class Node
     // return true;
   }
 
-  GetTargetNode(){ return this.GetNode(); }
-  GetNodeName(){ return this.GetNode().nodeName; }
-  GetLocalName(){ return this.constructor.GetLocalName(); }
+  GetTargetNode() { return this.GetNode(); }
+  GetNodeName() { return this.GetNode().nodeName; }
+  GetLocalName() { return this.constructor.GetLocalName(); }
 
-  GetValue(){ return this.GetNode()?.value; }
+  GetValue() { return this.GetNode()?.value; }
 
-  GetParentNode(){ return this.GetNode().parentNode; }
-  GetOffsetParentNode(){ return this.GetNode().offsetParent; }
-  GetFirstChildNode(){ return this.GetNode().firstChild; }
-  GetLastChildNode(){ return this.GetNode().lastChild; }
-  GetPrevSiblingNode(){ return this.GetNode().previousSibling; }
-  GetNextSiblingNode(){ return this.GetNode().nextSibling; }
-  GetChildCount(){ return this.GetNode().childNodes.length; }
-  GetChildNodes(){ return this.GetNode().childNodes; }
-  GetChildrenCount(){ return this.GetNode().children.length; }
-  GetChildNode(i = 0){ return this.GetChildNodes()[i]; }
-  GetShadowNode(){ return this.GetNode().shadowRoot; }
-  GetNodeType(){ return this.GetNode().nodeType; }
+  GetParentNode() { return this.GetNode().parentNode; }
+  GetOffsetParentNode() { return this.GetNode().offsetParent; }
+  GetFirstChildNode() { return this.GetNode().firstChild; }
+  GetLastChildNode() { return this.GetNode().lastChild; }
+  GetPrevSiblingNode() { return this.GetNode().previousSibling; }
+  GetNextSiblingNode() { return this.GetNode().nextSibling; }
+  GetChildCount() { return this.GetNode().childNodes.length; }
+  GetChildNodes() { return this.GetNode().childNodes; }
+  GetChildrenCount() { return this.GetNode().children.length; }
+  GetChildNode(i = 0) { return this.GetChildNodes()[i]; }
+  GetShadowNode() { return this.GetNode().shadowRoot; }
+  GetNodeType() { return this.GetNode().nodeType; }
 
-  GetDepth()
-  {
+  GetDepth() {
     let depth = 0;
 
     let parent = this.GetParentNode();
-    while (parent)
-    {
+    while (parent) {
       depth += 1;
       parent = parent.GetParentNode();
     }
@@ -641,13 +602,11 @@ export class Node
     return depth;
   }
 
-  GetIndex()
-  {
+  GetIndex() {
     let count = -1;
 
     let node = this.GetNode();
-    while (node)
-    {
+    while (node) {
       count += 1;
       node = node.previousSibling;
     }
@@ -655,132 +614,126 @@ export class Node
     return count;
   }
 
-  IsText(){ return (this.GetNode() instanceof window.Text); }
-  IsNode(){ return (this.GetNode() instanceof window.Node); }
-  IsElement(){ return (this.GetNode() instanceof window.HTMLElement); }
-  IsCustom(){ return (this.GetNode() instanceof window.HTMLUnknownElement); }
-  IsChecked(){ return this.GetNode().checked === true; }
-  IsDisabled(){ return this.GetNode().disabled === true; }
+  IsText() { return (this.GetNode() instanceof window.Text); }
+  IsNode() { return (this.GetNode() instanceof window.Node); }
+  IsElement() { return (this.GetNode() instanceof window.HTMLElement); }
+  IsCustom() { return (this.GetNode() instanceof window.HTMLUnknownElement); }
+  IsChecked() { return this.GetNode().checked === true; }
+  IsDisabled() { return this.GetNode().disabled === true; }
 
-  IsElementNode(){ return this.GetNodeType() === 1; }
-  IsAttributeNode(){ return this.GetNodeType() === 2; } // Depreciated
-  IsTextNode(){ return this.GetNodeType() === 3; }
-  IsCdataSectionNode(){ return this.GetNodeType() === 4; }
-  IsEntityReferenceNode(){ return this.GetNodeType() === 5; } // Depreciated
-  IsEntityNode(){ return this.GetNodeType() === 6; } // Depreciated
-  IsProcessingInstructionNode(){ return this.GetNodeType() === 7; }
-  IsCommentNode(){ return this.GetNodeType() === 8; }
-  IsDocumentNode(){ return this.GetNodeType() === 9; }
-  IsDocumentTypeNode(){ return this.GetNodeType() === 10; }
-  IsDocumentFragmentNode(){ return this.GetNodeType() === 11; }
-  IsNotationNode(){ return this.GetNodeType() === 12; } // Depreciated
+  IsElementNode() { return this.GetNodeType() === 1; }
+  IsAttributeNode() { return this.GetNodeType() === 2; } // Depreciated
+  IsTextNode() { return this.GetNodeType() === 3; }
+  IsCdataSectionNode() { return this.GetNodeType() === 4; }
+  IsEntityReferenceNode() { return this.GetNodeType() === 5; } // Depreciated
+  IsEntityNode() { return this.GetNodeType() === 6; } // Depreciated
+  IsProcessingInstructionNode() { return this.GetNodeType() === 7; }
+  IsCommentNode() { return this.GetNodeType() === 8; }
+  IsDocumentNode() { return this.GetNodeType() === 9; }
+  IsDocumentTypeNode() { return this.GetNodeType() === 10; }
+  IsDocumentFragmentNode() { return this.GetNodeType() === 11; }
+  IsNotationNode() { return this.GetNodeType() === 12; } // Depreciated
 
-  ComparePosition(tag, mask){ return this.GetNode().compareDocumentPosition(tag.GetNode()) & mask; }
-  IsDisconnected(tag){ return this.ComparePosition(tag, DOCUMENT_POSITION_DISCONNECTED); }
-  IsPreceding(tag){ return this.ComparePosition(tag, DOCUMENT_POSITION_PRECEDING); }
-  IsFollowing(tag){ return this.ComparePosition(tag, DOCUMENT_POSITION_FOLLOWING); }
-  IsContained(tag){ return this.ComparePosition(tag, DOCUMENT_POSITION_CONTAINS); }
-  IsContainedBy(tag){ return this.ComparePosition(tag, DOCUMENT_POSITION_CONTAINED_BY); }
-  IsImplementationSpecific(tag){ return this.ComparePosition(tag, DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC); }
+  ComparePosition(tag, mask) { return this.GetNode().compareDocumentPosition(tag.GetNode()) & mask; }
+  IsDisconnected(tag) { return this.ComparePosition(tag, DOCUMENT_POSITION_DISCONNECTED); }
+  IsPreceding(tag) { return this.ComparePosition(tag, DOCUMENT_POSITION_PRECEDING); }
+  IsFollowing(tag) { return this.ComparePosition(tag, DOCUMENT_POSITION_FOLLOWING); }
+  IsContained(tag) { return this.ComparePosition(tag, DOCUMENT_POSITION_CONTAINS); }
+  IsContainedBy(tag) { return this.ComparePosition(tag, DOCUMENT_POSITION_CONTAINED_BY); }
+  IsImplementationSpecific(tag) { return this.ComparePosition(tag, DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC); }
 
-  IsSame(tag){ return this.GetNode().isSameNode(tag.GetNode()); }
-  IsEqual(tag){ return this.GetNode().isEqualNode(tag.GetNode()); }
-  HasChildNodes(){ return this.GetNode().hasChildNodes(); }
-  HasChildren(){ return this.GetNode().hasChildNodes(); }
-  IsParent(){ return this.GetNode().hasChildNodes() === true; }
-  IsConnected(v){ return this.GetNode().isConnected === true; }
+  IsSame(tag) { return this.GetNode().isSameNode(tag.GetNode()); }
+  IsEqual(tag) { return this.GetNode().isEqualNode(tag.GetNode()); }
+  HasChildNodes() { return this.GetNode().hasChildNodes(); }
+  HasChildren() { return this.GetNode().hasChildNodes(); }
+  IsParent() { return this.GetNode().hasChildNodes() === true; }
+  IsConnected(v) { return this.GetNode().isConnected === true; }
 
-  GetDocumentNode(){ return this.GetNode().ownerDocument; }
-  GetRootNode(){ return this.GetNode().getRootNode(); } // QUESTION: Use { composed: true }?
+  GetDocumentNode() { return this.GetNode().ownerDocument; }
+  GetRootNode() { return this.GetNode().getRootNode(); } // QUESTION: Use { composed: true }?
 
-  [TO_TAG](){ return this; }
+  [TO_TAG]() { return this; }
 
-  ConvertUndefined(v){ return undefined; }
-  ConvertString(v){ return this.ConvertNode(this.constructor.CreateNodeText(v)); }
-  ConvertNumber(v){ return this.ConvertNode(this.constructor.CreateNode("number", "value", [v])); }
-  ConvertBoolean(v){ return this.ConvertNode(this.constructor.CreateNode("boolean", "value", [v])); }
-  ConvertSymbol(v){ return this.ConvertNode(this.constructor.CreateNode("symbol", "value", [v])); }
-  ConvertFunction(v){ return this.ConvertNode(this.constructor.CreateNode("function", "value", [v])); }
-  ConvertPromise(v){ return this.ConvertNode(this.constructor.CreateNode("promise", "value", [v])); }
-  ConvertArray(v){ return this.ConvertNode(this.constructor.CreateNode("array", "value", [v])); }
-  ConvertDate(v){ return this.ConvertNode(this.constructor.CreateNode("date", "value", [v])); }
-  ConvertRecord(v){ return this.ConvertNode(this.constructor.CreateNode("record", "value", [v])); }
-  ConvertTuple(v){ return this.ConvertNode(this.constructor.CreateNode("tuple", "value", [v])); }
-  ConvertNull(v){ return this.ConvertNode(this.constructor.CreateNode("null")); }
-  ConvertEvent(v){ return this.ConvertNode(this.constructor.CreateNode("event", "value", [v])); }
-  ConvertURL(v){ return this.ConvertNode(this.constructor.CreateNode("url", "value", [v])); }
-  ConvertPrimitive(v){ return this.Convert(v[Symbol.toPrimitive]()); }
-  ConvertCollection(v){ return this.ConvertNode(this.constructor.CreateNode("collection", "value", [v])); }
-  ConvertIterable(v){ return this.ConvertNode(this.constructor.CreateNode("iterable", "value", [v])); }
-  ConvertAsyncIterable(v){ return this.ConvertNode(this.constructor.CreateNode("async-iterator", "value", [v])); }
+  ConvertUndefined(v) { return undefined; }
+  ConvertString(v) { return this.ConvertNode(this.constructor.CreateNodeText(v)); }
+  ConvertNumber(v) { return this.ConvertNode(this.constructor.CreateNode("number", "value", [v])); }
+  ConvertBigInt(v) { return this.ConvertNode(this.constructor.CreateNode("bigint", "value", [v])); }
+  ConvertBoolean(v) { return this.ConvertNode(this.constructor.CreateNode("boolean", "value", [v])); }
+  ConvertSymbol(v) { return this.ConvertNode(this.constructor.CreateNode("symbol", "value", [v])); }
+  ConvertFunction(v) { return this.ConvertNode(this.constructor.CreateNode("function", "value", [v])); }
+  ConvertPromise(v) { return this.ConvertNode(this.constructor.CreateNode("promise", "value", [v])); }
+  ConvertArray(v) { return this.ConvertNode(this.constructor.CreateNode("array", "value", [v])); }
+  ConvertDate(v) { return this.ConvertNode(this.constructor.CreateNode("date", "value", [v])); }
+  ConvertRecord(v) { return this.ConvertNode(this.constructor.CreateNode("record", "value", [v])); }
+  ConvertTuple(v) { return this.ConvertNode(this.constructor.CreateNode("tuple", "value", [v])); }
+  ConvertNull(v) { return this.ConvertNode(this.constructor.CreateNode("null")); }
+  ConvertEvent(v) { return this.ConvertNode(this.constructor.CreateNode("event", "value", [v])); }
+  ConvertURL(v) { return this.ConvertNode(this.constructor.CreateNode("url", "value", [v])); }
+  ConvertPrimitive(v) { return this.Convert(v[Symbol.toPrimitive]()); }
+  ConvertCollection(v) { return this.ConvertNode(this.constructor.CreateNode("collection", "value", [v])); }
+  ConvertIterable(v) { return this.ConvertNode(this.constructor.CreateNode("iterable", "value", [v])); }
+  ConvertAsyncIterable(v) { return this.ConvertNode(this.constructor.CreateNode("async-iterator", "value", [v])); }
 
-  ConvertFunction(v)
-  {
-    if (v !== Object && v.prototype instanceof Object)
-    {
+  ConvertFunction(v) {
+    if (v !== Object && v.prototype instanceof Object) {
       return this.ConvertClass(v);
     }
-    else
-    {
+    else {
       return this.constructor.NewModule("Function", v).GetNode();
 
       // return this.ConvertNode(this.constructor.CreateNode("function", "value", [v]));
     }
   }
 
-  ConvertFunction(v)
-  {
+  ConvertFunction(v) {
     return this.constructor.NewModule("Function", v).GetNode();
   }
 
-  ConvertError(v){ return this.constructor.CreateNode("error", "value", [v]); }
-  ConvertRangeError(v){ return this.ConvertError(v); }
-  ConvertEvalError(v){ return this.ConvertError(v); }
-  ConvertReferenceError(v){ return this.ConvertError(v); }
-  ConvertSyntaxError(v){ return this.ConvertError(v); }
-  ConvertTypeError(v){ return this.ConvertError(v); }
-  ConvertURIError(v){ return this.ConvertError(v); }
+  ConvertError(v) { return this.constructor.CreateNode("error", "value", [v]); }
+  ConvertRangeError(v) { return this.ConvertError(v); }
+  ConvertEvalError(v) { return this.ConvertError(v); }
+  ConvertReferenceError(v) { return this.ConvertError(v); }
+  ConvertSyntaxError(v) { return this.ConvertError(v); }
+  ConvertTypeError(v) { return this.ConvertError(v); }
+  ConvertURIError(v) { return this.ConvertError(v); }
 
-  ConvertNull(v){ return this.constructor.NewModule("Null", v).GetNode(); }
-  ConvertBoolean(v){ return this.constructor.NewModule("Boolean", v).GetNode(); }
-  ConvertURL(v){ return this.constructor.NewModule("URL", v).GetNode(); }
-  ConvertCollection(v){ return this.constructor.NewModule("Collection", v).GetNode(); }
-  ConvertIterable(v){ return this.constructor.NewModule("Iterable", v).GetNode(); }
-  ConvertAsyncIterable(v){ return this.constructor.NewModule("AsyncIterable", v).GetNode(); }
-  ConvertTuple(v){ return this.constructor.NewModule("Tuple", v).GetNode(); }
-  ConvertRecord(v){ return this.constructor.NewModule("Record", v).GetNode(); }
-  ConvertSymbol(v){ return this.constructor.NewModule("Symbol", v).GetNode(); }
-  ConvertDate(v){ return this.constructor.NewModule("Date", v).GetNode(); }
-  ConvertPromise(v){ return this.constructor.NewModule("Promise", v).GetNode(); }
-  ConvertEvent(v){ return this.constructor.NewModule("Event", v).GetNode(); }
-  ConvertClass(v){ return this.constructor.NewModule("Class", v).GetNode(); }
-  ConvertNumber(v){ return this.constructor.NewModule("Number", v).GetNode(); }
-  ConvertError(v){ return this.constructor.NewModule("Error", v).GetNode(); }
+  ConvertNull(v) { return this.constructor.NewModule("Null", v).GetNode(); }
+  ConvertBoolean(v) { return this.constructor.NewModule("Boolean", v).GetNode(); }
+  ConvertURL(v) { return this.constructor.NewModule("URL", v).GetNode(); }
+  ConvertCollection(v) { return this.constructor.NewModule("Collection", v).GetNode(); }
+  ConvertIterable(v) { return this.constructor.NewModule("Iterable", v).GetNode(); }
+  ConvertAsyncIterable(v) { return this.constructor.NewModule("AsyncIterable", v).GetNode(); }
+  ConvertTuple(v) { return this.constructor.NewModule("Tuple", v).GetNode(); }
+  ConvertRecord(v) { return this.constructor.NewModule("Record", v).GetNode(); }
+  ConvertSymbol(v) { return this.constructor.NewModule("Symbol", v).GetNode(); }
+  ConvertDate(v) { return this.constructor.NewModule("Date", v).GetNode(); }
+  ConvertPromise(v) { return this.constructor.NewModule("Promise", v).GetNode(); }
+  ConvertEvent(v) { return this.constructor.NewModule("Event", v).GetNode(); }
+  ConvertClass(v) { return this.constructor.NewModule("Class", v).GetNode(); }
+  ConvertNumber(v) { return this.constructor.NewModule("Number", v).GetNode(); }
+  ConvertError(v) { return this.constructor.NewModule("Error", v).GetNode(); }
 
-  ConvertNumber(v){ return new tags_module.Number(v).GetNode(); }
-  ConvertString(value){ return new tags_module.Text(value).GetNode(); }
+  ConvertNumber(v) { return new tags_module.Number(v).GetNode(); }
+  ConvertString(value) { return new tags_module.Text(value).GetNode(); }
 
   // ConvertNode(v){ return v; }
-  ConvertElement(v){ return this.ConvertNode(v); }
-  ConvertComment(v){ return this.ConvertNode(v); }
-  ConvertText(v){ return this.ConvertNode(v); }
-  ConvertDocument(v){ return this.ConvertNode(v); }
-  ConvertFragment(v){ return this.ConvertNode(v); }
+  ConvertElement(v) { return this.ConvertNode(v); }
+  ConvertComment(v) { return this.ConvertNode(v); }
+  ConvertText(v) { return this.ConvertNode(v); }
+  ConvertDocument(v) { return this.ConvertNode(v); }
+  ConvertFragment(v) { return this.ConvertNode(v); }
 
-  ConvertNode(node)
-  {
+  ConvertNode(node) {
     return this.constructor.For(node).GetNode();
   }
 
-  ConvertAttr(v){ return this.ConvertNode(v); }
+  ConvertAttr(v) { return this.ConvertNode(v); }
 
-  ConvertTag(v)
-  {
+  ConvertTag(v) {
     const name = v.GetLocalName() ?? v.GetNodeName();
 
     // If we haven't seen this name before
-    if (!CONSTRUCTOR_CACHE.hasOwnProperty(name))
-    {
+    if (!CONSTRUCTOR_CACHE.hasOwnProperty(name)) {
       // Then cache its constructor, so we can auto-construct it again later
       CONSTRUCTOR_CACHE[name] = v.constructor;
     }
@@ -788,37 +741,28 @@ export class Node
     return v.GetNode();
   }
 
-  ConvertUnknownObject(v){ return this.ConvertNode(this.constructor.CreateNode("plain-object", "value", [v])); }
-  ConvertUnknown(v){ return this.ConvertNode(this.constructor.CreateNode("unknown", "value", [v])); }
-  ConvertModule(v)
-  {
-    if (v.default)
-    {
+  ConvertUnknownObject(v) { return this.ConvertNode(this.constructor.CreateNode("plain-object", "value", [v])); }
+  ConvertUnknown(v) { return this.ConvertNode(this.constructor.CreateNode("unknown", "value", [v])); }
+  ConvertModule(v) {
+    if (v.default) {
       return this.Convert(v.default);
-    }
-    else
-    {
+    } else {
       throw new Error("No default for module", v);
     }
   }
 
-  static Convert()
-  {
-    return new this().GetNode();
-  }
+  // TODO: Does this make any sense? I don't think it does
+  static Convert() { return new this().GetNode(); }
 
-  ConvertClass(v)
-  {
-    if (v.prototype instanceof Node)
-    {
+  ConvertClass(v) {
+    if (v.prototype instanceof Node) {
       return v.Convert();
     }
 
     return this.ConvertNode(this.constructor.CreateNode("class", "value", [v]));
   }
 
-  ConvertObject(v)
-  {
+  ConvertObject(v) {
     if (v === null) return this.ConvertNull(v);
     // const fn = v[TO_NODE];
     // if (typeof(fn) === "function")
@@ -826,8 +770,7 @@ export class Node
     //   return fn.call(v);
     // }
 
-    switch (v.constructor)
-    {
+    switch (v.constructor) {
       case globalThis.Object: return this.ConvertPlainObject(v);
       case globalThis.Date: return this.ConvertDate(v);
       case globalThis.String: return this.ConvertString(v);
@@ -853,7 +796,7 @@ export class Node
       // case Node: return this.ConvertTag(v);
     }
 
-    if      (v instanceof Node) return this.ConvertTag(v); // Instance of this Node class, not a DOM Node
+    if (v instanceof Node) return this.ConvertTag(v); // Instance of this Node class, not a DOM Node
     else if (v instanceof globalThis.Array) return this.ConvertArray(v);
     else if (v instanceof globalThis.Promise) return this.ConvertPromise(v);
     else if (v instanceof globalThis.Error) return this.ConvertError(v);
@@ -864,29 +807,24 @@ export class Node
     else if (v instanceof WindowEvent) return this.ConvertEvent(v);
     else if (v instanceof WindowHTMLCollection) return this.ConvertCollection(v);
     else if (v[Symbol.toStringTag] === "Module") return this.ConvertModule(v);
-    else if (typeof(v[Symbol.iterator]) === "function") return this.ConvertIterable(v);
-    else if (typeof(v[Symbol.asyncIterator]) === "function") return this.ConvertAsyncIterable(v);
-    else if (typeof(v[Symbol.toPrimitive]) === "function") return this.ConvertPrimitive(v);
+    else if (typeof (v[Symbol.iterator]) === "function") return this.ConvertIterable(v);
+    else if (typeof (v[Symbol.asyncIterator]) === "function") return this.ConvertAsyncIterable(v);
+    else if (typeof (v[Symbol.toPrimitive]) === "function") return this.ConvertPrimitive(v);
     else return this.ConvertUnknownObject(v);
   }
 
-  ConvertObject(v, ctor)
-  {
+  ConvertObject(v, ctor) {
     if (v === null) return this.ConvertNull(v);
 
-    if (v.hasOwnProperty(NODE))
-    {
+    if (v.hasOwnProperty(NODE)) {
       return v[NODE];
     }
-    else if (v.hasOwnProperty(TAG))
-    {
+    else if (v.hasOwnProperty(TAG)) {
       return v[TAG].GetNode();
     }
-    else
-    {
+    else {
       const toTag = v[TO_TAG];
-      if (typeof(toTag) === "function")
-      {
+      if (typeof (toTag) === "function") {
         const tag = toTag.call(v, this.constructor.GetTagsModule(), this);
         return this.ConvertTag(tag);
       }
@@ -899,8 +837,7 @@ export class Node
 
     ctor ??= v.constructor;
 
-    switch (ctor)
-    {
+    switch (ctor) {
       case Node: return this.ConvertTag(v);
       case globalThis.Object: return this.ConvertPlainObject(v);
       case globalThis.Date: return this.ConvertDate(v);
@@ -925,13 +862,13 @@ export class Node
       case WindowHTMLElement: return this.ConvertElement(v);
       case WindowHTMLCollection: return this.ConvertCollection(v);
       default:
-      {
-        if (v[TO_TAG])
-        return this.ConvertObject(v, globalThis.Object.getPrototypeOf(ctor));
-      }
+        {
+          if (v[TO_TAG])
+            return this.ConvertObject(v, globalThis.Object.getPrototypeOf(ctor));
+        }
     }
 
-    if      (v instanceof Node) return this.ConvertTag(v); // Instance of this Node class, not a DOM Node
+    if (v instanceof Node) return this.ConvertTag(v); // Instance of this Node class, not a DOM Node
     else if (v instanceof globalThis.Array) return this.ConvertArray(v);
     else if (v instanceof globalThis.Promise) return this.ConvertPromise(v);
     else if (v instanceof globalThis.Error) return this.ConvertError(v);
@@ -942,19 +879,18 @@ export class Node
     else if (v instanceof WindowEvent) return this.ConvertEvent(v);
     else if (v instanceof WindowHTMLCollection) return this.ConvertCollection(v);
     else if (v[Symbol.toStringTag] === "Module") return this.ConvertModule(v);
-    else if (typeof(v[Symbol.iterator]) === "function") return this.ConvertIterable(v);
-    else if (typeof(v[Symbol.asyncIterator]) === "function") return this.ConvertAsyncIterable(v);
-    else if (typeof(v[Symbol.toPrimitive]) === "function") return this.ConvertPrimitive(v);
+    else if (typeof (v[Symbol.iterator]) === "function") return this.ConvertIterable(v);
+    else if (typeof (v[Symbol.asyncIterator]) === "function") return this.ConvertAsyncIterable(v);
+    else if (typeof (v[Symbol.toPrimitive]) === "function") return this.ConvertPrimitive(v);
     else return this.ConvertUnknownObject(v);
   }
 
-  Convert(v)
-  {
-    switch (typeof(v))
-    {
+  Convert(v) {
+    switch (typeof (v)) {
       case "function": return this.ConvertFunction(v);
       case "string": return this.ConvertString(v);
       case "number": return this.ConvertNumber(v);
+      case "bigint": return this.ConvertBigInt(v);
       case "boolean": return this.ConvertBoolean(v);
       case "symbol": return this.ConvertSymbol(v);
       case "undefined": return this.ConvertUndefined(v);
@@ -965,15 +901,14 @@ export class Node
     }
   }
 
-  Deconvert(){ return this.GetNode(); }
+  Deconvert() { return this.GetNode(); }
 
-  GetText(){ return this.GetNode().textContent; }
-  IsTrusted(){ return this.constructor.IsTrusted(this.GetNode()); }
-  IsDangerous(){ return this.constructor.IsDangerous(this.GetNode()); }
+  GetText() { return this.GetNode().textContent; }
+  IsTrusted() { return this.constructor.IsTrusted(this.GetNode()); }
+  IsDangerous() { return this.constructor.IsDangerous(this.GetNode()); }
 
   // This has the default because Edge will render an undefined as "undefined"
-  SetProperty(key, value = "")
-  {
+  SetProperty(key, value = "") {
     this.GetNode()[key] = value;
     return this;
   }

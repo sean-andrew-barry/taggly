@@ -1,13 +1,13 @@
 // import "/flag#static";
 import "/flag#internal";
 
-import {Node} from "/js/Internal/Node.js";
-import {Environment} from "/js/Environment.js";
-import {Event} from "/js/Event.js";
-import {Array as ArrayHelper} from "/js/Array.js";
-import {IsNodeVisible} from "/js/External/IsNodeVisible.js";
-import {window} from "/js/Window.js";
-import {Freeze} from "/js/Utility/Freeze.js";
+import { Node } from "/js/Internal/Node.js";
+import { Environment } from "/js/Environment.js";
+import { Event } from "/js/Event.js";
+import { Array as ArrayHelper } from "/js/Array.js";
+import { IsNodeVisible } from "/js/External/IsNodeVisible.js";
+import { window } from "/js/Window.js";
+import { Freeze } from "/js/Utility/Freeze.js";
 
 const COMPUTED_STYLE = Symbol("computed_style");
 const ANIMATION = Symbol("animation");
@@ -15,26 +15,23 @@ const FRAMES = Symbol("frames");
 const FORMATTER = new Intl.NumberFormat();
 const EVENT_HANDLERS = new WeakMap();
 
-export class Element extends Node
-{
-  static GetMetaURL(){ return import.meta.url; }
-  static GetLocalName(){ return "element"; }
-  static GetComputedStyleSymbol(){ return COMPUTED_STYLE; }
-  static GetFormatterObject(){ return FORMATTER; }
+export class Element extends Node {
+  static GetMetaURL() { return import.meta.url; }
+  static GetLocalName() { return "element"; }
+  static GetComputedStyleSymbol() { return COMPUTED_STYLE; }
+  static GetFormatterObject() { return FORMATTER; }
 
-  static Text(...args){ return new this().Text(...args); }
-  static ID(...args){ return new this().ID(...args); }
-  static Class(...args){ return new this().Class(...args); }
-  static Name(...args){ return new this().Name(...args); }
-  static HRef(...args){ return new this().HRef(...args); }
-  static Src(...args){ return new this().Src(...args); }
-  static Type(...args){ return new this().Type(...args); }
+  static Text(...args) { return new this().Text(...args); }
+  static ID(...args) { return new this().ID(...args); }
+  static Class(...args) { return new this().Class(...args); }
+  static Name(...args) { return new this().Name(...args); }
+  static HRef(...args) { return new this().HRef(...args); }
+  static Src(...args) { return new this().Src(...args); }
+  static Type(...args) { return new this().Type(...args); }
 
-  static ConvertNodesToTagArray(nodes, selector)
-  {
+  static ConvertNodesToTagArray(nodes, selector) {
     const tags = [];
-    for (let i = 0; i < nodes.length; i++)
-    {
+    for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
 
       if (node?.tag) tags.push(node.tag);
@@ -44,64 +41,54 @@ export class Element extends Node
     return tags;
   }
 
-  static GetDefaultQueryNode(){ return window.document; }
+  static GetDefaultQueryNode() { return window.document; }
 
-  static QuerySelectorHelper(selector, node = this.GetDefaultQueryNode())
-  {
+  static QuerySelectorHelper(selector, node = this.GetDefaultQueryNode()) {
     return node.querySelector(selector);
   }
 
-  static QuerySelectorAllHelper(selector, node = this.GetDefaultQueryNode())
-  {
+  static QuerySelectorAllHelper(selector, node = this.GetDefaultQueryNode()) {
     return node.querySelectorAll(selector);
   }
 
-  static WarnQueryHasNoTag(selector, element)
-  {
+  static WarnQueryHasNoTag(selector, element) {
     console.warn(`Selector "${selector}" matched an element that does not have a tag`, element);
   }
 
-  static Query(selector, node = this.GetDefaultQueryNode())
-  {
+  static Query(selector, node = this.GetDefaultQueryNode()) {
     if (!node) throw new Error(`Query must be given a node to query`);
 
     const element = this.QuerySelectorHelper(selector, node);
-    if (element)
-    {
+    if (element) {
       return element?.tag ?? this.WarnQueryHasNoTag(selector, element);
     }
   }
 
-  static QueryAll(selector, node = this.GetDefaultQueryNode())
-  {
+  static QueryAll(selector, node = this.GetDefaultQueryNode()) {
     if (!node) throw new Error(`QueryAll must be given a node to query`);
 
     const elements = this.QuerySelectorAllHelper(selector, node);
     return this.ConvertNodesToTagArray(elements, selector);
   }
 
-  static QuerySort(selector, sorter, node = this.GetDefaultQueryNode(), sorted)
-  {
+  static QuerySort(selector, sorter, node = this.GetDefaultQueryNode(), sorted) {
     if (!node) throw new Error(`QuerySort must be given a node to query`);
 
     const unsorted = this.QueryAll(selector, node);
     sorted ??= unsorted.slice().sort(sorter);
 
-    for (let i = 0; i < unsorted.length; i++)
-    {
+    for (let i = 0; i < unsorted.length; i++) {
       const a = unsorted[i];
       const b = sorted[i];
 
-      if (a !== b)
-      {
+      if (a !== b) {
         a.Swap(b);
         return this.QuerySort(selector, sorter, node, sorted);
       }
     }
   }
 
-  static QueryEach(selector, callback, node = this.GetDefaultQueryNode())
-  {
+  static QueryEach(selector, callback, node = this.GetDefaultQueryNode()) {
     if (!node) throw new Error(`QueryEach must be given a node to query`);
 
     const tags = this.QueryAll(selector, node);
@@ -112,29 +99,24 @@ export class Element extends Node
     // }
   }
 
-  static QueryDeepest(selector, node = this.GetDefaultQueryNode())
-  {
+  static QueryDeepest(selector, node = this.GetDefaultQueryNode()) {
     if (!node) throw new Error(`QueryDeepest must be given a node to query`);
 
     const children = node.children;
     if (!children) return;
 
-    for (let i = 0; i < children.length; i++)
-    {
+    for (let i = 0; i < children.length; i++) {
       const child = children[i];
-      if (child && child.tag)
-      {
+      if (child && child.tag) {
         // Found a match
-        if (child.tag.IsMatch(selector))
-        {
+        if (child.tag.IsMatch(selector)) {
           // Check if any of its children are better matches
           const result = this.QueryDeepest(selector, child);
 
           if (result) return result; // Found a deeper match, return it
           else return child; // Return the original match
         }
-        else
-        {
+        else {
           // No match yet, so recursively search its children
           return this.QueryDeepest(selector, child);
         }
@@ -142,37 +124,31 @@ export class Element extends Node
     }
   }
 
-  static QueryLast(selector, node = this.GetDefaultQueryNode())
-  {
+  static QueryLast(selector, node = this.GetDefaultQueryNode()) {
     if (!node) throw new Error(`QueryLast must be given a node to query`);
 
     const children = node.children;
     if (!children) return;
 
-    for (let i = children.length - 1; i >= 0; i--)
-    {
+    for (let i = children.length - 1; i >= 0; i--) {
       const child = children[i];
-      if (child && child.tag)
-      {
+      if (child && child.tag) {
         if (child.tag.IsMatch(selector)) return child; // Found a match, return it
         else return this.QueryDeepest(selector, child);
       }
     }
   }
 
-  static QueryClosest(selector, node = this.GetDefaultQueryNode())
-  {
+  static QueryClosest(selector, node = this.GetDefaultQueryNode()) {
     if (!node) throw new Error(`QueryClosest must be given a node to query`);
     return node.closest(selector)?.tag;
   }
 
-  static QueryPoint(x, y, node = this.GetDefaultQueryNode())
-  {
+  static QueryPoint(x, y, node = this.GetDefaultQueryNode()) {
     return window.document.elementFromPoint(x, y)?.tag;
   }
 
-  static QueryAdd(selector, ...args)
-  {
+  static QueryAdd(selector, ...args) {
     const node = this.GetDefaultQueryNode();
     const target = this.Query(selector, node);
 
@@ -182,14 +158,12 @@ export class Element extends Node
     return this;
   }
 
-  static FindByID(id)
-  {
+  static FindByID(id) {
     const element = window.document.getElementById(id);
     if (element) return element?.tag ?? this.WarnQueryHasNoTag(`#${id}`, element);
   }
 
-  static GetByID(id)
-  {
+  static GetByID(id) {
     const tag = this.FindByID(id);
 
     if (tag) return tag;
@@ -198,16 +172,14 @@ export class Element extends Node
 
   // Each of these have a ?? null fallback because they should not fall back to the static GetDefaultQueryNode function
   // Instead they should error, since the query was *suppose* to be limited in its scope
-  QuerySort(selector, sorter){ return this.constructor.QuerySort(selector, sorter, this.GetNode() ?? null); }
-  QueryEach(selector, callback){ return this.constructor.QueryEach(selector, callback, this.GetNode() ?? null); }
-  QueryDeepest(selector){ return this.constructor.QueryDeepest(selector, this.GetNode() ?? null); }
-  QueryLast(selector){ return this.constructor.QueryLast(selector, this.GetNode() ?? null); }
+  QuerySort(selector, sorter) { return this.constructor.QuerySort(selector, sorter, this.GetNode() ?? null); }
+  QueryEach(selector, callback) { return this.constructor.QueryEach(selector, callback, this.GetNode() ?? null); }
+  QueryDeepest(selector) { return this.constructor.QueryDeepest(selector, this.GetNode() ?? null); }
+  QueryLast(selector) { return this.constructor.QueryLast(selector, this.GetNode() ?? null); }
 
-  QueryScope(selector)
-  {
+  QueryScope(selector) {
     const prev = this.GetPrevSibling();
-    if (prev)
-    {
+    if (prev) {
       if (prev.IsMatch(selector)) return prev;
 
       const result = prev.Query(selector);
@@ -215,8 +187,7 @@ export class Element extends Node
 
       return prev.QueryScope(selector);
     }
-    else
-    {
+    else {
       // If it's a parent, we don't perform a query on its children,
       // that only happens with older siblings
       const parent = this.GetParent();
@@ -231,17 +202,13 @@ export class Element extends Node
 
   // TODO: Possibly make this an OnMutation instead of OnConnect?
   // Or maybe just depreciate it entirely?
-  QueryAsync(selector)
-  {
+  QueryAsync(selector) {
     const tag = this.Query(selector);
     if (tag) return tag;
 
-    return new Promise((resolve, reject) =>
-    {
-      this.OnConnect(event =>
-      {
-        if (event.tag.IsMatch(selector))
-        {
+    return new Promise((resolve, reject) => {
+      this.OnConnect(event => {
+        if (event.tag.IsMatch(selector)) {
           this.RemoveEventListener(event);
           return resolve(event.tag);
         }
@@ -249,25 +216,20 @@ export class Element extends Node
     });
   }
 
-  constructor(value)
-  {
+  constructor(value) {
     super(value);
 
-    if (typeof(value) === "string")
-    {
+    if (typeof (value) === "string") {
       this.Class(value);
     }
   }
 
-  _destructor()
-  {
+  _destructor() {
     let child = this.GetFirstChildNode();
-    while (child)
-    {
+    while (child) {
       const tag = this.constructor.GetTag(child);
 
-      if (tag)
-      {
+      if (tag) {
         tag.destructor();
       }
 
@@ -280,36 +242,28 @@ export class Element extends Node
     return super.destructor();
   }
 
-  ConvertAllToNodesHelper(array)
-  {
-    if (array.length === 0)
-    {
+  ConvertAllToNodesHelper(array) {
+    if (array.length === 0) {
       return array;
-    }
-    else if (ArrayHelper.IsTemplateObject(array[0]))
-    {
+    } else if (ArrayHelper.IsTemplateObject(array[0])) {
       const strings = array[0];
       // const values = array.slice(1);
       const length = Math.max(strings.length, array.length - 1);
       const results = [];
 
-      for (let i = 0; i < length; i++)
-      {
+      for (let i = 0; i < length; i++) {
         const string = this.Convert(strings[i]);
-        const value  = this.Convert(array[i + 1]);
+        const value = this.Convert(array[i + 1]);
 
         if (string !== undefined) results.push(string);
-        if (value  !== undefined) results.push(value );
+        if (value !== undefined) results.push(value);
       }
 
       return results;
-    }
-    else
-    {
+    } else {
       const results = [];
 
-      for (let i = 0; i < array.length; i++)
-      {
+      for (let i = 0; i < array.length; i++) {
         const value = this.Convert(array[i]);
         if (value !== undefined) results.push(value);
       }
@@ -318,111 +272,103 @@ export class Element extends Node
     }
   }
 
-  static Prepend(...args){ return new this().Prepend(...args); }
-  static Append(...args){ return new this().Append(...args); }
+  static Prepend(...args) { return new this().Prepend(...args); }
+  static Append(...args) { return new this().Append(...args); }
 
-  Prepend(...values)
-  {
+  Prepend(...values) {
     const nodes = this.ConvertAllToNodesHelper(values);
     this.GetNode().prepend(...nodes);
     return this;
   }
 
-  Append(...values)
-  {
+  Append(...values) {
     const nodes = this.ConvertAllToNodesHelper(values);
     this.GetNode().append(...nodes);
     return this;
   }
 
-  Append(...values)
-  {
+  Append(...values) {
     const nodes = this.ConvertAllToNodesHelper(values);
 
     const node = this.GetNode();
-    for (let i = 0; i < nodes.length; i++)
-    {
+    for (let i = 0; i < nodes.length; i++) {
       node.appendChild(nodes[i]);
     }
 
     return this;
   }
 
-  ShadowAppend(...values)
-  {
+  ShadowAppend(...values) {
     this.GetShadow().Append(...values);
     return this;
   }
 
-  ShadowPrepend(...values)
-  {
+  ShadowPrepend(...values) {
     this.GetShadow().Prepend(...values);
     return this;
   }
 
   // Aliases for Append, might depreciate
-  Add(...values){ return this.Append(...values); }
-  TL(...values){ return this.Append(...values); }
+  Add(...values) { return this.Append(...values); }
+  TL(...values) { return this.Append(...values); }
 
-  Before(...values)
-  {
+  Before(...values) {
     const nodes = this.ConvertAllToNodesHelper(values);
     this.GetNode().before(...nodes);
     return this;
   }
 
-  After(...values)
-  {
+  After(...values) {
     const nodes = this.ConvertAllToNodesHelper(values);
     this.GetNode().after(...nodes);
     return this;
   }
 
-  ReplaceChildren(...values)
-  {
+  ReplaceChildren(...values) {
     const nodes = this.ConvertAllToNodesHelper(values);
     this.GetNode().replaceChildren(...nodes);
     return this;
   }
 
   // Replace this element with the values
-  ReplaceWith(...values)
-  {
+  ReplaceWith(...values) {
+    const nodes = this.ConvertAllToNodesHelper(values);
+    this.GetNode().replaceWith(...nodes);
+    return this;
+  }
+
+  Replace(...values) {
     const nodes = this.ConvertAllToNodesHelper(values);
     this.GetNode().replaceWith(...nodes);
     return this;
   }
 
   // TODO: Test the performance of manually clearing vs. using replaceChildren()
-  Clear()
-  {
+  Clear() {
     this.GetNode().replaceChildren();
     return this;
   }
 
-  Remove()
-  {
+  Remove() {
     this.GetNode().remove();
     return this;
   }
 
-  GetValue(){ return super.GetValue() ?? this.GetAttribute("value"); }
-  GetLocalName(){ return this.GetNode()?.localName ?? super.GetLocalName(); }
+  GetValue() { return super.GetValue() ?? this.GetAttribute("value"); }
+  GetLocalName() { return this.GetNode()?.localName ?? super.GetLocalName(); }
 
-  GetParent(){ return this.constructor.For(this.GetParentNode()); }
-  GetOffsetParent(){ return this.constructor.For(this.GetOffsetParentNode()); }
-  GetFirstChild(){ return this.constructor.For(this.GetFirstChildNode()); }
-  GetLastChild(){ return this.constructor.For(this.GetLastChildNode()); }
-  GetPrevSibling(){ return this.constructor.For(this.GetPrevSiblingNode()); }
-  GetNextSibling(){ return this.constructor.For(this.GetNextSiblingNode()); }
-  GetChild(i = 0){ return this.constructor.For(this.GetChildNode(i)); }
+  GetParent() { return this.constructor.For(this.GetParentNode()); }
+  GetOffsetParent() { return this.constructor.For(this.GetOffsetParentNode()); }
+  GetFirstChild() { return this.constructor.For(this.GetFirstChildNode()); }
+  GetLastChild() { return this.constructor.For(this.GetLastChildNode()); }
+  GetPrevSibling() { return this.constructor.For(this.GetPrevSiblingNode()); }
+  GetNextSibling() { return this.constructor.For(this.GetNextSiblingNode()); }
+  GetChild(i = 0) { return this.constructor.For(this.GetChildNode(i)); }
 
-  GetChildren()
-  {
+  GetChildren() {
     const children = [];
     const nodes = this.GetChildNodes();
-    for (let i = 0; i < nodes.length; i++)
-    {
+    for (let i = 0; i < nodes.length; i++) {
       const child = this.constructor.For(nodes[i]);
       if (child) children.push(child);
     }
@@ -430,8 +376,7 @@ export class Element extends Node
     return children;
   }
 
-  HTML(html)
-  {
+  HTML(html) {
     // console.warn("Element.HTML is not fully implemented and may be depreciated");
 
     const inactive_document = window.document.implementation.createHTMLDocument();
@@ -444,88 +389,71 @@ export class Element extends Node
     return this;
   }
 
-  ForEachChild(fn, self)
-  {
+  ForEachChild(fn, self) {
     const node = this.GetNode();
-    for (let i = 0; i < node.children.length; i++)
-    {
+    for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i];
       if (child.tag) fn.call(self, child.tag, i);
     }
   }
 
-  FindParent(fn, self)
-  {
+  FindParent(fn, self) {
     const tag = this.GetParent();
-    if (tag)
-    {
+    if (tag) {
       if (fn.call(self, tag) === true) return tag;
       else return tag.FindParent(fn, self);
     }
   }
 
-  FindPrevSibling(fn, self)
-  {
+  FindPrevSibling(fn, self) {
     const tag = this.GetPrevSibling();
-    if (tag)
-    {
+    if (tag) {
       if (fn.call(self, tag) === true) return tag;
       else return tag.FindPrevSibling(fn, self);
     }
   }
 
-  FindNextSibling(fn, self)
-  {
+  FindNextSibling(fn, self) {
     const tag = this.GetNextSibling();
-    if (tag)
-    {
+    if (tag) {
       if (fn.call(self, tag) === true) return tag;
       else return tag.FindNextSibling(fn, self);
     }
   }
 
-  FindFirstChild(fn, self)
-  {
+  FindFirstChild(fn, self) {
     const tag = this.GetFirstChild();
-    if (tag)
-    {
+    if (tag) {
       if (fn.call(self, tag) === true) return tag;
       else return tag.FindFirstChild(fn, self);
     }
   }
 
-  FindLastChild(fn, self)
-  {
+  FindLastChild(fn, self) {
     const tag = this.GetLastChild();
-    if (tag)
-    {
+    if (tag) {
       if (fn.call(self, tag) === true) return tag;
       else return tag.FindLastChild(fn, self);
     }
   }
 
-  FindChild(fn, self)
-  {
+  FindChild(fn, self) {
     const node = this.GetNode();
-    for (let i = 0; i < node.children.length; i++)
-    {
+    for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i];
       if (child.tag && fn.call(self, child.tag) === true) return child.tag;
     }
   }
 
-  HasShadow(){ return !!this.GetShadowNode(); }
-  GetShadow(){ return this.constructor.For(this.GetShadowNode()); }
-  CreateShadow(mode = "open")
-  {
+  HasShadow() { return !!this.GetShadowNode(); }
+  GetShadow() { return this.constructor.For(this.GetShadowNode()); }
+  CreateShadow(mode = "open") {
     const node = this.GetNode();
     const fn = node.attachShadow;
 
-    if (Environment.IsClient())
-    {
+    if (Environment.IsClient()) {
       // If the mode is closed, make sure the function hasn't been tampered with
-      if ((mode === "closed") && (fn.toString() !== "function attachShadow() { [native code] }"))
-      {
+      if ((mode === "closed") && (fn.toString() !== "function attachShadow() { [native code] }")) {
         throw new Error("The Element.prototype.attachShadow function has been tampered with, meaning a closed shadow is not truly closed");
       }
     }
@@ -534,57 +462,52 @@ export class Element extends Node
     return this.constructor.For(shadow);
   }
 
-  GetFirstClass(){ return this.GetClassList()[0]; }
-  GetLastClass(){ const list = this.GetClassList(); return list[list.length - 1]; }
+  GetFirstClass() { return this.GetClassList()[0]; }
+  GetLastClass() { const list = this.GetClassList(); return list[list.length - 1]; }
 
-  GetClasses(){ return this.GetNode().className; }
-  GetClassList(){ return this.GetNode().classList; }
-  GetClassCount(){ return this.GetClassList().length; }
-  HasClass(value){ return this.GetClassList().contains(value); }
-  SetClass(value){ this.GetClassList().add(value); return this; }
-  AddClass(...values){ this.GetClassList().add(...values); return this; }
-  RemoveClass(...values){ this.GetClassList().remove(...values); return this; }
-  ReplaceClass(old, value){ this.GetClassList().replace(old, value); return this; }
-  ToggleClass(value, force){ this.GetClassList().toggle(value, force); return this; }
-  ForEachClass(fn, self = this){ this.GetClassList().forEach(fn, self); return this; }
-  GetClassKeys(){ return this.GetClassList().keys(); }
-  GetClassValues(){ return this.GetClassList().values(); }
-  GetClassEntries(){ return this.GetClassList().entries(); }
-  GetClassCount(){ return this.GetClassList().length; }
-  GetClass(i = 0){ return this.GetClassList().item(i); }
+  GetClasses() { return this.GetNode().className; }
+  GetClassList() { return this.GetNode().classList; }
+  GetClassCount() { return this.GetClassList().length; }
+  HasClass(value) { return this.GetClassList().contains(value); }
+  SetClass(value) { this.GetClassList().add(value); return this; }
+  AddClass(...values) { this.GetClassList().add(...values); return this; }
+  RemoveClass(...values) { this.GetClassList().remove(...values); return this; }
+  ReplaceClass(old, value) { this.GetClassList().replace(old, value); return this; }
+  ToggleClass(value, force) { this.GetClassList().toggle(value, force); return this; }
+  ForEachClass(fn, self = this) { this.GetClassList().forEach(fn, self); return this; }
+  GetClassKeys() { return this.GetClassList().keys(); }
+  GetClassValues() { return this.GetClassList().values(); }
+  GetClassEntries() { return this.GetClassList().entries(); }
+  GetClassCount() { return this.GetClassList().length; }
+  GetClass(i = 0) { return this.GetClassList().item(i); }
 
-  GetAttributes(){ return this.GetNode().attributes; }
-  HasAttribute(name){ return this.GetNode().hasAttribute(name); }
-  GetAttributeString(name){ return this.GetNode().getAttribute(name); }
-  GetAttributeDisplay(name){ return this.GetNode().getAttribute(name); }
-  GetAttributeNode(name){ return this.GetNode().getAttributeNode(name); }
-  RemoveAttribute(name){ this.GetNode().removeAttribute(name); return this; }
-  SetAttributeNode(node){ this.GetNode().setAttributeNode(node); return this; }
-  SetAttributeNodeNS(name, node, ns){ this.GetNode().setAttributeNodeNS(name, node, ns); return this; }
-  SetAttributeNS(name, value = "", ns = null){ this.GetNode().setAttributeNS(ns, name, value); return this; }
+  GetAttributes() { return this.GetNode().attributes; }
+  HasAttribute(name) { return this.GetNode().hasAttribute(name); }
+  GetAttributeString(name) { return this.GetNode().getAttribute(name); }
+  GetAttributeDisplay(name) { return this.GetNode().getAttribute(name); }
+  GetAttributeNode(name) { return this.GetNode().getAttributeNode(name); }
+  RemoveAttribute(name) { this.GetNode().removeAttribute(name); return this; }
+  SetAttributeNode(node) { this.GetNode().setAttributeNode(node); return this; }
+  SetAttributeNodeNS(name, node, ns) { this.GetNode().setAttributeNodeNS(name, node, ns); return this; }
+  SetAttributeNS(name, value = "", ns = null) { this.GetNode().setAttributeNS(ns, name, value); return this; }
 
   // Set a node's attribute value and store the original value as its [NODE_VALUE] to preserve the type
-  SetAttribute(name, value, display, unit)
-  {
+  SetAttribute(name, value, display, unit) {
     // console.log("SetAttribute", name, value, display);
 
     // If it's a number and no display override was provided, auto format it
-    if (typeof(value) === "number" && display === undefined)
-    {
+    if (typeof (value) === "number" && display === undefined) {
       display = FORMATTER.format(value);
-      if (unit !== undefined)
-      {
+      if (unit !== undefined) {
         display += unit;
       }
     }
 
     let attribute = this.GetAttributeNode(name);
-    if (attribute)
-    {
+    if (attribute) {
       attribute.value = display ?? value?.toString(); // Set the attribute's value
     }
-    else
-    {
+    else {
       attribute = this.constructor.CreateNodeAttribute(name); // Construct a TRUSTED attribute
       attribute.value = display ?? value?.toString(); // The attribute.value must be applied before calling setAttributeNode
 
@@ -600,37 +523,30 @@ export class Element extends Node
   }
 
   // Get an attribute's [NODE_VALUE], .value property, or .nodeValue property
-  GetAttribute(name)
-  {
+  GetAttribute(name) {
     const attribute = this.GetAttributeNode(name);
 
-    if (!attribute)
-    {
+    if (!attribute) {
       return undefined;
     }
-    else
-    {
+    else {
       return this.constructor.GetNodeValue(attribute)
-          ?? attribute.value
-          ?? attribute.nodeValue
-          ?? undefined;
+        ?? attribute.value
+        ?? attribute.nodeValue
+        ?? undefined;
     }
   }
 
-  SetMissingAttribute(name, value, display)
-  {
+  SetMissingAttribute(name, value, display) {
     if (this.HasAttribute(name)) return this;
     else return this.SetAttribute(name, value, display);
   }
 
-  ClearAttributes()
-  {
+  ClearAttributes() {
     const attributes = this.GetAttributes();
-    if (attributes)
-    {
-      for (let i = attributes.length - 1; i >= 0; i--)
-      {
-        const {name, value} = attributes[i];
+    if (attributes) {
+      for (let i = attributes.length - 1; i >= 0; i--) {
+        const { name, value } = attributes[i];
         this.RemoveAttribute(name);
       }
     }
@@ -638,13 +554,10 @@ export class Element extends Node
     return this;
   }
 
-  ForEachAttribute(fn, self = this)
-  {
+  ForEachAttribute(fn, self = this) {
     const attributes = this.GetAttributes();
-    if (attributes)
-    {
-      for (let i = 0; i < attributes.length; i++)
-      {
+    if (attributes) {
+      for (let i = 0; i < attributes.length; i++) {
         const attribute = attributes[i];
         fn.call(self, attribute.name, attribute.value, attribute);
       }
@@ -653,62 +566,55 @@ export class Element extends Node
     return this;
   }
 
-  ToggleAttribute(name, force)
-  {
-    if (force === true || !this.HasAttribute(name))
-    {
+  ToggleAttribute(name, force) {
+    if (force === true || !this.HasAttribute(name)) {
       return this.SetAttribute(name, "");
     }
-    else
-    {
+    else {
       return this.RemoveAttribute(name);
     }
   }
 
-  ToggleAttribute(name, force)
-  {
+  ToggleAttribute(name, force) {
     this.GetNode().toggleAttribute(name, force);
     return this;
   }
 
-  GetDataSet(){ return this.GetNode().dataset; }
-  GetData(name){ return this.GetDataSet()[name]; }
-  AddData(name, value)
-  {
+  GetDataSet() { return this.GetNode().dataset; }
+  GetData(name) { return this.GetDataSet()[name]; }
+  AddData(name, value) {
     this.GetDataSet()[name] = value;
     return this;
   }
 
-  RemoveData(name)
-  {
+  RemoveData(name) {
     delete this.GetDataSet()[name];
     return this;
   }
 
-  GetClientHeight(){ return this.GetNode().clientHeight; }
-  GetClientLeft(){ return this.GetNode().clientLeft; }
-  GetClientTop(){ return this.GetNode().clientTop; }
-  GetClientWidth(){ return this.GetNode().clientWidth; }
-  GetOffsetWidth(){ return this.GetNode().offsetWidth; }
-  GetOffsetHeight(){ return this.GetNode().offsetHeight; }
-  GetAssignedSlot(){ return this.GetNode().assignedSlot; }
-  GetChildElementCount(){ return this.GetNode().childElementCount; }
-  GetNamespaceURI(){ return this.GetNode().namespaceURI; }
-  GetPrefix(){ return this.GetNode().prefix; } // With <x:div> returns "x";
-  GetBoundingClientRect(){ return this.GetNode().getBoundingClientRect(); }
-  GetClientRects(){ return this.GetNode().getClientRects(); }
+  GetClientHeight() { return this.GetNode().clientHeight; }
+  GetClientLeft() { return this.GetNode().clientLeft; }
+  GetClientTop() { return this.GetNode().clientTop; }
+  GetClientWidth() { return this.GetNode().clientWidth; }
+  GetOffsetWidth() { return this.GetNode().offsetWidth; }
+  GetOffsetHeight() { return this.GetNode().offsetHeight; }
+  GetAssignedSlot() { return this.GetNode().assignedSlot; }
+  GetChildElementCount() { return this.GetNode().childElementCount; }
+  GetNamespaceURI() { return this.GetNode().namespaceURI; }
+  GetPrefix() { return this.GetNode().prefix; } // With <x:div> returns "x";
+  GetBoundingClientRect() { return this.GetNode().getBoundingClientRect(); }
+  GetClientRects() { return this.GetNode().getClientRects(); }
 
-  InnerHTML(v){ return this.SetProperty("innerHTML", v); }
-  OuterHTML(v){ return this.SetProperty("outerHTML", v); }
-  InnerText(v){ return this.SetProperty("innerText", v); }
-  OuterText(v){ return this.SetProperty("outerText", v); }
+  InnerHTML(v) { return this.SetProperty("innerHTML", v); }
+  OuterHTML(v) { return this.SetProperty("outerHTML", v); }
+  InnerText(v) { return this.SetProperty("innerText", v); }
+  OuterText(v) { return this.SetProperty("outerText", v); }
 
-  GetOuterHTML(){ return this.GetNode().outerHTML; }
-  GetInnerHTML(){ return this.GetNode().innerHTML; }
-  GetOwnHTML(){ return this.GetNode().cloneNode(false).outerHTML; }
+  GetOuterHTML() { return this.GetNode().outerHTML; }
+  GetInnerHTML() { return this.GetNode().innerHTML; }
+  GetOwnHTML() { return this.GetNode().cloneNode(false).outerHTML; }
 
-  GetAbsoluteBoundingClientRect()
-  {
+  GetAbsoluteBoundingClientRect() {
     const box = this.GetBoundingClientRect();
 
     const top = box.top + window.pageYOffset;
@@ -724,8 +630,7 @@ export class Element extends Node
     return box;
   }
 
-  GetAbsoluteBoundingClientRect(rect = this.GetBoundingClientRect())
-  {
+  GetAbsoluteBoundingClientRect(rect = this.GetBoundingClientRect()) {
     const top = rect.top + window.pageYOffset;
     const right = rect.right + window.pageXOffset;
     const bottom = rect.bottom + window.pageYOffset;
@@ -743,8 +648,7 @@ export class Element extends Node
     };
   }
 
-  GetRectHash(rect)
-  {
+  GetRectHash(rect) {
     return String.fromCharCode(
       Math.floor(rect.x),
       Math.floor(rect.y),
@@ -753,70 +657,59 @@ export class Element extends Node
     );
   }
 
-  GetStyles()
-  {
-    if (this.HasAttribute("stylesheet"))
-    {
+  GetStyles() {
+    if (this.HasAttribute("stylesheet")) {
       const sheet = this.GetAttribute("stylesheet");
       return sheet.GetRule(this).style;
     }
-    else
-    {
+    else {
       return this.GetNode().style;
     }
   }
 
-  GetStylesText(){ return this.GetStyles().cssText; }
-  ClearStyles(){ return this.RemoveAttribute("style"); }
+  GetStylesText() { return this.GetStyles().cssText; }
+  ClearStyles() { return this.RemoveAttribute("style"); }
 
-  _CreateComputedStyle()
-  {
+  _CreateComputedStyle() {
     return window.getComputedStyle(this.GetNode());
   }
 
-  _ClearComputedStyle()
-  {
+  _ClearComputedStyle() {
     this[COMPUTED_STYLE] = undefined;
     return this;
   }
 
   // GetComputedStyle(){ return this[COMPUTED_STYLE] ??= this.CreateComputedStyle(); }
   // GetComputedStyle(){ return this.CreateComputedStyle(); }
-  GetComputedStyle(){ return window.getComputedStyle(this.GetNode()); }
+  GetComputedStyle() { return window.getComputedStyle(this.GetNode()); }
 
-  ShouldSetStyleClear(name, value, important, styles){ return Environment.IsClient(); }
-  ShouldSetStyleWarn(name, value, important, styles){ return Environment.IsClient() && !styles.getPropertyValue(name); }
+  ShouldSetStyleClear(name, value, important, styles) { return Environment.IsClient(); }
+  ShouldSetStyleWarn(name, value, important, styles) { return Environment.IsClient() && !styles.getPropertyValue(name); }
 
-  GetFrames(){ return this[FRAMES] ??= []; }
-  ClearFrames(){ this[FRAMES] = undefined; return this; }
+  GetFrames() { return this[FRAMES] ??= []; }
+  ClearFrames() { this[FRAMES] = undefined; return this; }
 
-  AppendFrames(key, values)
-  {
+  AppendFrames(key, values) {
     const frames = this.GetFrames();
-    if (values.length === 1)
-    {
+    if (values.length === 1) {
       values.push(values[0]);
     }
 
-    for (let i = 0; i < values.length; i++)
-    {
+    for (let i = 0; i < values.length; i++) {
       const value = values[i];
       if (value === undefined || value === null) continue;
 
       // console.log("Adding", { [key]: value }, "to frame", i);
 
-      if (i >= frames.length)
-      {
+      if (i >= frames.length) {
         frames.push({
           [key]: value,
         });
       }
-      else if (frames[i][key])
-      {
+      else if (frames[i][key]) {
         frames[i][key] += " " + value;
       }
-      else
-      {
+      else {
         frames[i][key] = value;
       }
     }
@@ -824,61 +717,50 @@ export class Element extends Node
     return this;
   }
 
-  ParseNumberCSS(string)
-  {
-    if (string === "infinite")
-    {
+  ParseNumberCSS(string) {
+    if (string === "infinite") {
       return Infinity;
     }
-    else
-    {
+    else {
       const number = window.Number(string);
-      if (!window.Number.isNaN(number))
-      {
+      if (!window.Number.isNaN(number)) {
         return number;
       }
     }
   }
 
-  ParseTimeCSS(string)
-  {
-    if (string.endsWith("ms"))
-    {
+  ParseTimeCSS(string) {
+    if (string.endsWith("ms")) {
       const number = window.Number(string.slice(0, -2));
       if (!window.Number.isNaN(number)) return number;
     }
-    else if (string.endsWith("s"))
-    {
+    else if (string.endsWith("s")) {
       const number = window.Number(string.slice(0, -1));
       if (!window.Number.isNaN(number)) return number;
     }
   }
 
-  GetAnimations(){ return this.GetNode().getAnimations(); }
+  GetAnimations() { return this.GetNode().getAnimations(); }
 
-  GetAnimationOptions()
-  {
+  GetAnimationOptions() {
     let iterations = 1;
     let delay = 0;
     let duration = 0;
 
     const iteration_style = this.GetStyle("animation-iteration-count");
-    if (iteration_style)
-    {
+    if (iteration_style) {
       const number = this.ParseNumberCSS(iteration_style);
       if (number !== undefined) iterations = number;
     }
 
     const delay_style = this.GetStyle("animation-delay");
-    if (delay_style)
-    {
+    if (delay_style) {
       const number = this.ParseTimeCSS(delay_style);
       if (number !== undefined) delay = number;
     }
 
     const duration_style = this.GetStyle("animation-duration");
-    if (duration_style)
-    {
+    if (duration_style) {
       const number = this.ParseTimeCSS(duration_style);
       if (number !== undefined) duration = number;
     }
@@ -897,8 +779,7 @@ export class Element extends Node
     };
   }
 
-  Animate()
-  {
+  Animate() {
     const options = this.GetAnimationOptions();
 
     // console.log("Animation options:", options);
@@ -908,44 +789,35 @@ export class Element extends Node
     const animation = this.GetNode().animate(frames, options);
 
     const state = this.GetStyle("animation-play-state") || undefined;
-    if (state === "paused")
-    {
+    if (state === "paused") {
       animation.pause();
     }
 
     return this;
   }
 
-  Stylesheet(stylesheet)
-  {
-    if (stylesheet)
-    {
+  Stylesheet(stylesheet) {
+    if (stylesheet) {
       return this.SetAttribute("stylesheet", stylesheet, stylesheet.GetSelector());
     }
-    else
-    {
+    else {
       return this.RemoveAttribute("stylesheet");
     }
   }
 
-  SetStyle(name, value, important = false)
-  {
-    if (value === undefined || value === null)
-    {
+  SetStyle(name, value, important = false) {
+    if (value === undefined || value === null) {
       this.RemoveStyle(name);
     }
-    else
-    {
+    else {
       const styles = this.GetStyles();
 
       // If the style should be cleared before setting it
-      if (this.ShouldSetStyleClear(name, value, important, styles))
-      {
+      if (this.ShouldSetStyleClear(name, value, important, styles)) {
         styles.removeProperty(name);
       }
 
-      if (typeof(value) === "object" && value instanceof globalThis.Array)
-      {
+      if (typeof (value) === "object" && value instanceof globalThis.Array) {
         // console.log("Animation", name, "is", value);
 
         this.AppendFrames(name, value);
@@ -956,8 +828,7 @@ export class Element extends Node
 
       styles.setProperty(name, value, (important === true) ? "important" : undefined);
 
-      if (this.ShouldSetStyleWarn(name, value, important, styles))
-      {
+      if (this.ShouldSetStyleWarn(name, value, important, styles)) {
         console.warn(`Failed to set style "${name}" to "${value}"`);
       }
 
@@ -967,31 +838,25 @@ export class Element extends Node
     return this;
   }
 
-  SetStyle(name, value, important = false)
-  {
-    if (value === undefined || value === null)
-    {
+  SetStyle(name, value, important = false) {
+    if (value === undefined || value === null) {
       this.RemoveStyle(name);
     }
-    else
-    {
+    else {
       const styles = this.GetStyles();
 
       // I'm curious if this is a performance improvement?
       // It may stop the browser from doing a reflow at times
-      if (styles.getPropertyValue(name) === value)
-      {
+      if (styles.getPropertyValue(name) === value) {
         return this;
       }
 
       // If the style should be cleared before setting it
-      if (this.ShouldSetStyleClear(name, value, important, styles))
-      {
+      if (this.ShouldSetStyleClear(name, value, important, styles)) {
         styles.removeProperty(name);
       }
 
-      if (typeof(value) === "object" && value instanceof global.Array)
-      {
+      if (typeof (value) === "object" && value instanceof global.Array) {
         this.AppendFrames(name, value);
 
         // Default to the first value
@@ -1000,8 +865,7 @@ export class Element extends Node
 
       styles.setProperty(name, value, (important === true) ? "important" : undefined);
 
-      if (this.ShouldSetStyleWarn(name, value, important, styles))
-      {
+      if (this.ShouldSetStyleWarn(name, value, important, styles)) {
         console.warn(`Failed to set style "${name}" to "${value}"`);
       }
     }
@@ -1010,10 +874,8 @@ export class Element extends Node
   }
 
   // TODO: Possibly depreciate AppendStyle
-  AppendStyle(name, value, important, original)
-  {
-    if (typeof(original) === "object" && original instanceof window.Array)
-    {
+  AppendStyle(name, value, important, original) {
+    if (typeof (original) === "object" && original instanceof window.Array) {
       console.log("Animation", name, "is", original);
     }
 
@@ -1037,75 +899,68 @@ export class Element extends Node
     return this;
   }
 
-  ToggleStyle(name, value, important = false)
-  {
+  ToggleStyle(name, value, important = false) {
     const style = this.GetStyles();
     const current = style.getPropertyValue(name);
 
     style.setProperty(name, value, (important === true) ? "important" : undefined);
 
     // If the computed style did not change, it's the same, so toggle it off
-    if (style.getPropertyValue(name) === current)
-    {
+    if (style.getPropertyValue(name) === current) {
       style.removeProperty(name);
     }
 
     return this;
   }
 
-  GetStyle(name)
-  {
+  GetStyle(name) {
     const styles = this.GetStyles();
     return styles.getPropertyValue(name);
   }
 
-  RemoveStyle(name)
-  {
+  RemoveStyle(name) {
     this.GetStyles().removeProperty(name);
     return this;
   }
 
-  HasStyle(name)
-  {
+  HasStyle(name) {
     return !!this.GetStyles().getPropertyValue(name);
   }
 
-  IsMatch(query){ return this.GetNode().matches(query); }
-  IsHovered(){ return this.IsMatch(":hover"); }
-  IsActive(){ return this.IsMatch(":active"); }
-  IsFocused(){ return this.IsMatch(":focus"); }
-  IsFocusedWithin(){ return this.IsMatch(":focus-within"); }
-  IsUnvisited(){ return this.IsMatch(":link"); }
-  IsChecked(){ return this.IsMatch(":checked"); }
-  IsDisabled(){ return this.IsMatch(":disabled"); }
-  IsEnabled(){ return this.IsMatch(":enabled"); }
-  IsFirst(){ return this.IsMatch(":first"); }
-  IsFirstChild(){ return this.IsMatch(":first-child"); }
-  IsLast(){ return this.IsMatch(":last"); }
-  IsLastChild(){ return this.IsMatch(":last-child"); }
-  IsOnlyChild(){ return this.IsMatch(":only-child"); }
-  IsOptional(){ return this.IsMatch(":optional"); }
-  IsReadOnly(){ return this.IsMatch(":read-only"); }
-  IsRequired(){ return this.IsMatch(":required"); }
-  IsValid(){ return this.IsMatch(":valid"); }
-  IsVisited(){ return this.IsMatch(":visited"); }
-  IsInvalid(){ return this.IsMatch(":invalid"); }
+  IsMatch(query) { return this.GetNode().matches(query); }
+  IsHovered() { return this.IsMatch(":hover"); }
+  IsActive() { return this.IsMatch(":active"); }
+  IsFocused() { return this.IsMatch(":focus"); }
+  IsFocusedWithin() { return this.IsMatch(":focus-within"); }
+  IsUnvisited() { return this.IsMatch(":link"); }
+  IsChecked() { return this.IsMatch(":checked"); }
+  IsDisabled() { return this.IsMatch(":disabled"); }
+  IsEnabled() { return this.IsMatch(":enabled"); }
+  IsFirst() { return this.IsMatch(":first"); }
+  IsFirstChild() { return this.IsMatch(":first-child"); }
+  IsLast() { return this.IsMatch(":last"); }
+  IsLastChild() { return this.IsMatch(":last-child"); }
+  IsOnlyChild() { return this.IsMatch(":only-child"); }
+  IsOptional() { return this.IsMatch(":optional"); }
+  IsReadOnly() { return this.IsMatch(":read-only"); }
+  IsRequired() { return this.IsMatch(":required"); }
+  IsValid() { return this.IsMatch(":valid"); }
+  IsVisited() { return this.IsMatch(":visited"); }
+  IsInvalid() { return this.IsMatch(":invalid"); }
 
-  IsInDocument(){ return window.document.documentElement.contains(this.GetNode()); }
-  IsInHead(){ return window.document.head.contains(this.GetNode()); }
-  IsInBody(){ return window.document.body.contains(this.GetNode()); }
+  IsInDocument() { return window.document.documentElement.contains(this.GetNode()); }
+  IsInHead() { return window.document.head.contains(this.GetNode()); }
+  IsInBody() { return window.document.body.contains(this.GetNode()); }
 
   // Return true if the center point of the tag is below the screen height percentage
-  IsBelow(multiplier)
-  {
-    const {y, height} = this.GetRect();
+  IsBelow(multiplier) {
+    const { y, height } = this.GetRect();
     return !((window.innerHeight * multiplier) >= (y + (height / 2)));
   }
 
-  IsVisible(){ return IsNodeVisible(this.GetNode()); }
+  IsVisible() { return IsNodeVisible(this.GetNode()); }
 
-  IsInView(bounding = this.GetBoundingClientRect(), width = this.GetWindowWidth(), height = this.GetWindowHeight())
-  {
+  IsInView(bounding = this.GetBoundingClientRect(), width = this.GetWindowWidth(), height = this.GetWindowHeight()) {
     return (
       bounding.top >= 0 &&
       bounding.left >= 0 &&
@@ -1114,85 +969,74 @@ export class Element extends Node
     );
   }
 
-  GetWidth(rect = this.GetBoundingClientRect()){ return rect.width; }
-  GetHeight(rect = this.GetBoundingClientRect()){ return rect.height; }
+  GetWidth(rect = this.GetBoundingClientRect()) { return rect.width; }
+  GetHeight(rect = this.GetBoundingClientRect()) { return rect.height; }
 
-  GetWindowWidth(){ return window.innerWidth || window.document.clientWidth; }
-  GetWindowHeight(){ return window.innerHeight || window.document.clientHeight; }
-  GetViewWidth(){ return Math.max(document.documentElement.clientWidth, window.innerWidth); }
-  GetViewHeight(){ return Math.max(document.documentElement.clientHeight, window.innerHeight); }
+  GetWindowWidth() { return window.innerWidth || window.document.clientWidth; }
+  GetWindowHeight() { return window.innerHeight || window.document.clientHeight; }
+  GetViewWidth() { return Math.max(document.documentElement.clientWidth, window.innerWidth); }
+  GetViewHeight() { return Math.max(document.documentElement.clientHeight, window.innerHeight); }
 
-  IsPartiallyOnScreen(bounding = this.GetBoundingClientRect(), width = this.GetWindowWidth(), height = this.GetWindowHeight())
-  {
+  IsPartiallyOnScreen(bounding = this.GetBoundingClientRect(), width = this.GetWindowWidth(), height = this.GetWindowHeight()) {
     return bounding.top >= 0
-        || bounding.left >= 0
-        || bounding.right <= width
-        || bounding.bottom <= height;
+      || bounding.left >= 0
+      || bounding.right <= width
+      || bounding.bottom <= height;
   }
 
-  IsFullyOnScreen(bounding = this.GetBoundingClientRect(), width = this.GetWindowWidth(), height = this.GetWindowHeight())
-  {
+  IsFullyOnScreen(bounding = this.GetBoundingClientRect(), width = this.GetWindowWidth(), height = this.GetWindowHeight()) {
     return bounding.top >= 0
-        && bounding.left >= 0
-        && bounding.right <= width
-        && bounding.bottom <= height;
+      && bounding.left >= 0
+      && bounding.right <= width
+      && bounding.bottom <= height;
   }
 
-  IsFullyOffScreen(bounding = this.GetBoundingClientRect(), width = this.GetViewWidth(), height = this.GetViewHeight())
-  {
+  IsFullyOffScreen(bounding = this.GetBoundingClientRect(), width = this.GetViewWidth(), height = this.GetViewHeight()) {
     return (
-      ((bounding.x + bounding.width ) < 0) ||
+      ((bounding.x + bounding.width) < 0) ||
       ((bounding.y + bounding.height) < 0) ||
       ((bounding.x > width) || (bounding.y > height))
     );
   }
 
-  IsPointInside(x, y)
-  {
-    const {top, bottom, left, right} = this.GetBoundingClientRect();
+  IsPointInside(x, y) {
+    const { top, bottom, left, right } = this.GetBoundingClientRect();
     return (x >= left && right >= x) && (y >= top && bottom >= y);
   }
 
-  Contains(tag){ return this.GetNode().contains(tag.GetNode()); }
-  Normalize(){ return this.GetNode().normalize(); }
-  GetDocument(){ return this.constructor.For(this.GetDocumentNode()); }
-  GetRoot(){ return this.constructor.For(this.GetRootNode()); }
+  Contains(tag) { return this.GetNode().contains(tag.GetNode()); }
+  Normalize() { return this.GetNode().normalize(); }
+  GetDocument() { return this.constructor.For(this.GetDocumentNode()); }
+  GetRoot() { return this.constructor.For(this.GetRootNode()); }
 
-  static GetDocument(){ return this.For(window.document); }
+  static GetDocument() { return this.For(window.document); }
 
-  Scroll(x, y){ this.GetNode().scroll(x, y); return this; }
-  ScrollBy(x, y){ this.GetNode().scrollBy(x, y); return this; }
-  ScrollTo(options){ this.GetNode().scrollIntoView(options); return this; }
-  ScrollToSmooth(){ return this.ScrollTo({ behavior: "smooth" }); }
-  ScrollToCenter(){ return this.ScrollTo({ block: "center", inline: "nearest", }); }
-  ScrollToTop(){ return this.ScrollTo({ block: "start", inline: "nearest", }); }
-  ScrollToBottom(){ return this.ScrollTo({ block: "end", inline: "nearest", }); }
+  Scroll(x, y) { this.GetNode().scroll(x, y); return this; }
+  ScrollBy(x, y) { this.GetNode().scrollBy(x, y); return this; }
+  ScrollTo(options) { this.GetNode().scrollIntoView(options); return this; }
+  ScrollToSmooth() { return this.ScrollTo({ behavior: "smooth" }); }
+  ScrollToCenter() { return this.ScrollTo({ block: "center", inline: "nearest", }); }
+  ScrollToTop() { return this.ScrollTo({ block: "start", inline: "nearest", }); }
+  ScrollToBottom() { return this.ScrollTo({ block: "end", inline: "nearest", }); }
 
-  DispatchEvent(event)
-  {
+  DispatchEvent(event) {
     this.GetNode().dispatchEvent(event);
     return this;
   }
 
-  On(name, handler, options)
-  {
-    if (typeof(name) === "function" && name.prototype instanceof Event)
-    {
+  On(name, handler, options) {
+    if (typeof (name) === "function" && name.prototype instanceof Event) {
       name = name.GetLocalName();
     }
 
-    const handler_wrapper = event =>
-    {
-      try
-      {
+    const handler_wrapper = event => {
+      try {
         const result = handler.call(this, event, this);
-        if (result instanceof window.Promise)
-        {
+        if (result instanceof window.Promise) {
           result.catch(error => this.Throw(error));
         }
       }
-      catch (error)
-      {
+      catch (error) {
         this.Throw(error);
       }
     };
@@ -1205,10 +1049,8 @@ export class Element extends Node
     return this;
   }
 
-  Off(name, handler, options)
-  {
-    if (typeof(name) === "function" && name.prototype instanceof Event)
-    {
+  Off(name, handler, options) {
+    if (typeof (name) === "function" && name.prototype instanceof Event) {
       name = name.GetLocalName();
     }
 
@@ -1219,66 +1061,55 @@ export class Element extends Node
     return this;
   }
 
-  Once(name, handler)
-  {
+  Once(name, handler) {
     return this.On(name, handler, { once: true });
   }
 
-  Capture(name, handler)
-  {
+  Capture(name, handler) {
     return this.On(name, handler, { capture: true });
   }
 
-  Await(name, timeout)
-  {
-    if (typeof(name) === "function" && name.prototype instanceof Event)
-    {
+  Await(name, timeout) {
+    if (typeof (name) === "function" && name.prototype instanceof Event) {
       name = name.GetLocalName();
     }
 
     let resolve;
-    const handler = event =>
-    {
+    const handler = event => {
       resolve(event);
     };
 
     let timeout_id;
-    if (typeof(timeout) === "number")
-    {
-      timeout_id = window.setTimeout(() =>
-      {
+    if (typeof (timeout) === "number") {
+      timeout_id = window.setTimeout(() => {
         this.GetNode().removeEventListener(name, handler);
       }, timeout);
     }
 
-    return new Promise((res) =>
-    {
+    return new Promise((res) => {
       resolve = res;
 
       this.GetNode().addEventListener(name, handler, { once: true });
     });
   }
 
-  Click(){ this.GetNode().click(); return this; }
-  Focus(){ this.GetNode().focus(); return this; }
+  Click() { this.GetNode().click(); return this; }
+  Focus() { this.GetNode().focus(); return this; }
 
   //---------------------------------
   // Queries
   //---------------------------------
-  Query(selector)
-  {
+  Query(selector) {
     const node = this.GetNode().querySelector(selector);
     return this.constructor.For(node);
   }
 
-  QueryAll(selector)
-  {
+  QueryAll(selector) {
     const nodes = this.GetNode().querySelectorAll(selector);
     return Array.from(nodes, n => this.constructor.For(n));
   }
 
-  QueryAdd(selector, ...args)
-  {
+  QueryAdd(selector, ...args) {
     const target = this.Query(selector);
 
     if (target) target.Add(...args);
@@ -1289,65 +1120,55 @@ export class Element extends Node
     return this;
   }
 
-  QueryClosest(selector)
-  {
+  QueryClosest(selector) {
     const node = this.GetNode().closest(selector);
     return this.constructor.For(node);
   }
 
-  QueryAncestor(selector){ return this.GetParent()?.QueryClosest(selector); }
+  QueryAncestor(selector) { return this.GetParent()?.QueryClosest(selector); }
 
   // Uses Document's elementFromPoint, but constrains it to children of this tag
-  QueryPoint(x, y)
-  {
+  QueryPoint(x, y) {
     const tag = this.GetDocument()?.QueryPoint(x, y);
     if (tag && this.Contains(tag)) return tag;
   }
 
-  GetElementByID(id)
-  {
+  GetElementByID(id) {
     const tag = this.GetDocument()?.GetElementByID(id);
     if (tag && this.Contains(tag)) return tag;
   }
 
-  GetElementsByName(name)
-  {
+  GetElementsByName(name) {
     const elements = this.GetNode().getElementsByName(name);
     return Array.from(elements, e => this.constructor.For(e));
   }
 
-  GetElementsByClass(names)
-  {
+  GetElementsByClass(names) {
     const elements = this.GetNode().getElementsByClassName(names);
     return Array.from(elements, e => this.constructor.For(e));
   }
 
-  GetElementsByTag(names)
-  {
+  GetElementsByTag(names) {
     const elements = this.GetNode().getElementsByTagName(names);
     return Array.from(elements, e => this.constructor.For(e));
   }
 
-  GetByID(id)
-  {
+  GetByID(id) {
     const tag = this.GetDocument()?.GetElementByID(id);
     if (tag && this.Contains(tag)) return tag;
   }
 
-  QueryByName(name)
-  {
+  QueryByName(name) {
     const elements = this.GetNode().getElementsByName(name);
     return Array.from(elements, e => this.constructor.For(e));
   }
 
-  QueryByClass(names)
-  {
+  QueryByClass(names) {
     const elements = this.GetNode().getElementsByClassName(names);
     return Array.from(elements, e => this.constructor.For(e));
   }
 
-  QueryByTag(names)
-  {
+  QueryByTag(names) {
     const elements = this.GetNode().getElementsByTagName(names);
     return Array.from(elements, e => this.constructor.For(e));
   }
@@ -1355,62 +1176,50 @@ export class Element extends Node
   //---------------------------------
   // Iterators
   //---------------------------------
-  *[Symbol.iterator]()
-  {
+  *[Symbol.iterator]() {
     let child = this.GetFirstChild();
-    while (child)
-    {
+    while (child) {
       yield child;
       child = child.GetNextSibling();
     }
   }
 
-  *EachChild()
-  {
+  *EachChild() {
     let child = this.GetFirstChild();
-    while (child)
-    {
+    while (child) {
       yield child;
       child = child.GetNextSibling();
     }
   }
 
-  *EachOlderSibling()
-  {
+  *EachOlderSibling() {
     let sibling = this.GetPrevSibling();
-    while (sibling)
-    {
+    while (sibling) {
       yield sibling;
       sibling = sibling.GetPrevSibling();
     }
   }
 
-  *EachYoungerSibling()
-  {
+  *EachYoungerSibling() {
     let sibling = this.GetNextSibling();
-    while (sibling)
-    {
+    while (sibling) {
       yield sibling;
       sibling = sibling.GetNextSibling();
     }
   }
 
-  *EachParent()
-  {
+  *EachParent() {
     let parent = this.GetParent();
-    while (parent)
-    {
+    while (parent) {
       yield parent;
       parent = parent.GetParent();
     }
   }
 
-  *EachDescendant()
-  {
+  *EachDescendant() {
     const stack = [this.GetFirstChild()];
 
-    while (stack.length > 0)
-    {
+    while (stack.length > 0) {
       const top = stack.pop();
       yield top;
 
@@ -1422,25 +1231,19 @@ export class Element extends Node
     }
   }
 
-  *EachAttributeNode(fn, self = this)
-  {
+  *EachAttributeNode(fn, self = this) {
     const attributes = this.GetAttributes();
-    if (attributes)
-    {
-      for (let i = 0; i < attributes.length; i++)
-      {
+    if (attributes) {
+      for (let i = 0; i < attributes.length; i++) {
         yield attributes[i];
       }
     }
   }
 
-  *EachAttribute(fn, self = this)
-  {
+  *EachAttribute(fn, self = this) {
     const attributes = this.GetAttributes();
-    if (attributes)
-    {
-      for (let i = 0; i < attributes.length; i++)
-      {
+    if (attributes) {
+      for (let i = 0; i < attributes.length; i++) {
         const attribute = attributes[i];
         yield {
           name: attribute.name,
